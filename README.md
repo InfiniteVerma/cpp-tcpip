@@ -9,7 +9,9 @@ A tcp/ip stack in cpp, implementing RFC793.
       - Make your own socket API calls
       - TCB code
 - [ ] State machine
-- [ ] Timer code
+- [ ] Do 3 way handshake and maintain the state (of FSM) properly
+- [ ] Try sending a packet after connection is established
+- [ ] Timer logic 
 - [ ] Sequence window logic
 - [ ] Retransmission logic
 - [ ] First test
