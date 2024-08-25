@@ -13,7 +13,7 @@ void server()
     std::cout << "Hello from server thread\n";
     Socket socket("Server");
 
-    socket.bind(8000);
+    socket.bind(PORT);
     socket.listen();
 
     socket.debugPrint();
@@ -51,7 +51,15 @@ void client()
     std::cout << "Hello from client thread\n";
     Socket socket("Client");
 
-    socket.connect(8000);
+    int ret = socket.connect(PORT);
+
+    if(ret != 0)
+    {
+        // TODO formalize error coding 
+        std::cout << "3 way handshake failed\n";
+        socket.close();
+        return;
+    }
 
     const char* message = "CLOSE";
     socket.send(message, strlen(message), 0);

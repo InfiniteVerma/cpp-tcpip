@@ -14,9 +14,8 @@ using namespace std;
 
 Socket::Socket(std::string desc)
 {
-    //socketFd = socket(AF_INET, SOCK_RAW, 0);
+   // socketFd = socket(AF_INET, SOCK_RAW, 0);
     socketFd = socket(AF_INET, SOCK_STREAM, 0);
-    // TODO init TCB
     
     this->desc = desc;
 }
@@ -48,7 +47,11 @@ Socket::bind(int p)
 }
 
 // TODO handle case if same instance binds and connects to same port?
-void
+/*
+ * 1. connect to the TCP (low level)
+ * 2. Perform the 3-way handshake
+ */
+int
 Socket::connect(int p)
 {
     tcb.localPortNum = p;
@@ -59,14 +62,46 @@ Socket::connect(int p)
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
     // sending connection request
-    ::connect(socketFd, (struct sockaddr*)&serverAddress,
+    int ret = ::connect(socketFd, (struct sockaddr*)&serverAddress,
             sizeof(serverAddress));
+
+    if(ret != 0)
+    {
+        printf("Name: %s: Oh dear, something went wrong with connect()! error: %d, %s\n", desc.c_str(), errno, strerror(errno));
+        assert(0);
+    }
+
+    /*
+     * Start the 3 way handshake?
+     */
+    ret = threeWayHandshakeClient();
+
+    return ret;
 }
 
-void
-Socket::listen()
+/*
+ * Three way handshake as done by Client.
+ *
+ * 1. Sends SYN, updates state machine, starts timer, adds packet to transmission queue
+ * 2. Waits for SYN-ACK
+ * 3. If received, delete packet from queue
+ *    - Sends ACK, updates state machine
+ *    - starts timer, adds pkt to transmission queue
+ */
+int
+Socket::threeWayHandshakeClient()
 {
-    int ret = ::listen(socketFd, 5);
+    return 1;
+}
+
+/*
+ * Server is now is a passive state, waiting for SYN pkts from a client. 
+ * Once it receives one, it responds to complete the 3-way handshake
+ */
+void
+Socket::listen() // TODO support backlog queue
+{
+    int ret = ::listen(socketFd, 1);
 
     if(ret != 0)
     {
@@ -90,6 +125,10 @@ Socket::close()
     ::close(socketFd);
 }
 
+/*
+ * TODO this is complicated too. Server process isn't directly awake that 3-way handshake has completed.
+ * When they make 'accept' call, the next completed connection from the queue is returned
+ */
 int
 Socket::accept()
 {
