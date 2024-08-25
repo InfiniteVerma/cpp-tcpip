@@ -1,16 +1,22 @@
 CC = g++
 CFLAGS = -Wall -g
 
-all: mytcp
+all: mytcp 
 
-mytcp: main.o tcp.o
-	$(CC) $(CFLAGS) -o mytcp main.o tcp.o
+mytcp: main.o socket.o state_machine.o tcb.o
+	$(CC) $(CFLAGS) -o mytcp main.o socket.o state_machine.o tcb.o
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) -c main.cpp
 
-tcp.o: tcp.cpp
-	$(CC) $(CFLAGS) -c tcp.cpp
+tcb.o: tcb.cpp
+	$(CC) $(CFLAGS) -c tcb.cpp
+
+socket.o: socket.cpp
+	$(CC) $(CFLAGS) -c socket.cpp
+
+state_machine.o: state_machine.cpp
+	$(CC) $(CFLAGS) -c state_machine.cpp
 
 clean:
-	rm -f mytcp main.o tcp.o
+	rm -f mytcb *.o
