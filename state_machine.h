@@ -1,6 +1,7 @@
 #ifndef __RFC793_STATEMACHINE__
 #define __RFC793_STATEMACHINE__
 
+#include <ostream>
 enum ConnectionState {
     LISTEN = 0,
     SYN_SENT,
@@ -20,12 +21,14 @@ class TCBStateM {
 public:
     TCBStateM();
 
-    int getState();
+    ConnectionState getState();
     void updateState();
     void updateState(ConnectionState);
 
 private:
     ConnectionState state;
 };
+
+std::ostream& operator<<(std::ostream& os, const ConnectionState& state);
 
 #endif

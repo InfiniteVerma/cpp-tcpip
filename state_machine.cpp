@@ -7,7 +7,7 @@ TCBStateM::TCBStateM()
     state = CLOSED; 
 }
 
-int TCBStateM::getState()
+ConnectionState TCBStateM::getState()
 {
     return state;
 }
@@ -27,10 +27,8 @@ void TCBStateM::updateState(ConnectionState state)
     this->state = state;
 }
 
-std::ostream& operator<<(std::ostream& os, const ConnectionState& state)
-{
-    switch (state)
-    {
+std::ostream& operator<<(std::ostream& os, const ConnectionState& state) {
+    switch (state) {
         case LISTEN:
             os << "LISTEN";
             break;
@@ -38,7 +36,5 @@ std::ostream& operator<<(std::ostream& os, const ConnectionState& state)
             os << "UNDEFINED!";
             break;
     }
-
     return os;
 }
-

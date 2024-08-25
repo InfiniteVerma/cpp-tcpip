@@ -1,5 +1,6 @@
 #include "socket.h"
 #include "iostream"
+#include "state_machine.h"
 #include <cassert>
 #include <sys/socket.h>
 #include <netinet/in.h>

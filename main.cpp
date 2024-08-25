@@ -5,9 +5,9 @@ int main()
 {
     std::cout << "Hello World\n";
     Socket socket(8000);
-    socket.debugPrint();
 
     socket.bind();
     socket.listen();
+    socket.debugPrint();
     return 0;
 }
