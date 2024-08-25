@@ -5,10 +5,11 @@ A tcp/ip stack in cpp, implementing RFC793.
 #### Plan
 
 - [x] Read RFC793 few times
-- [ ] Boilerplate code
-      - Make your own socket API calls
+- [x] Boilerplate code
+      - Make your own basic socket API calls
       - TCB code
 - [ ] State machine
+- [ ] Packet constructor and parser
 - [ ] Do 3 way handshake and maintain the state (of FSM) properly
 - [ ] Try sending a packet after connection is established
 - [ ] Timer logic 
