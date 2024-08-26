@@ -2,6 +2,9 @@
 #define __RFC793_SOCKET__
 
 #include "tcb.h"
+#include <bitset>
+
+#define EPHEMERAL_PORT_SIZE 5
 
 class Socket {
 public:
@@ -16,11 +19,17 @@ public:
     void send(const char* message, size_t len, int flags);
     void close();
     int accept();
+
+    static int allocateEphemeralPortNum();
+    static void freeEphemeralPortNum(int portNum);
 private:
     int threeWayHandshakeClient();
     int socketFd;
     TCB tcb;
     std::string desc;
+
+    static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
+    static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
 };
 
 #endif

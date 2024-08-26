@@ -2,7 +2,6 @@
 #include <cstring>
 #include <iostream>
 #include <sys/socket.h>
-#include <thread>
 #include <unistd.h>
 #include "socket.h"
 
@@ -46,32 +45,8 @@ void server()
     socket.close();
 }
 
-void client()
-{
-    std::cout << "Hello from client thread\n";
-    Socket socket("Client");
-
-    int ret = socket.connect(PORT);
-
-    socket.debugPrint();
-
-    if(ret != 0)
-    {
-        // TODO formalize error coding 
-        std::cout << "3 way handshake failed\n";
-        socket.close();
-        return;
-    }
-
-    const char* message = "CLOSE";
-    socket.send(message, strlen(message), 0);
-    socket.close();
-}
-
 int main()
 {
-    std::thread serverThread(server);
-    std::thread clientThread(client);
-    clientThread.join();
-    serverThread.join();
+    server();
+    return 0;
 }

@@ -52,12 +52,34 @@ struct TCPHeader {
     UINT16 checksum;
     UINT16 urgent_pointer;
     UINT8 options; // TODO. should be multiples of 8 ideally?
+
+    TCPHeader()
+    {
+        source_port = 0;
+        dest_port = 0;
+        seq_number = 0;
+        ack_number = 0;
+        data_offset = 0;
+        reserved = 0;
+        control_bits = 0;
+        window = 0;
+        checksum = 0;
+        urgent_pointer = 0;
+        options = 0;
+    }
 };
 
 /*
  * Constructs a packet (payload + header)
  */
 class Packet {
+    public:
+        Packet(int sourcePort, int destPort);
+        ~Packet();
+
+        const char* makePacket();
+    private:
+        TCPHeader tcpHeader;
 };
 
 #endif

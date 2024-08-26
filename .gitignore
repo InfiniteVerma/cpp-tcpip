@@ -2,3 +2,5 @@
 *.o
 mytcp
 tags
+myclient
+myserver
