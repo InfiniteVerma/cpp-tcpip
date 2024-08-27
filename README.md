@@ -10,9 +10,9 @@ Continuously iterating on it since there's so much going on here :)
 - [x] Boilerplate code
     - [x] Make your own basic socket API calls
     - [x] TCB basic code
-- [ ] Communication over raw sockets
-    - [ ] IP Header class
-    - [ ] Test and verify packet exchange
+- [x] Communication over raw sockets
+    - [x] IP Header class
+    - [x] Test and verify packet exchange
 - [ ] 3 way handshake init
     - [ ] State machine
     - [ ] TCP segment header
@@ -26,4 +26,5 @@ Continuously iterating on it since there's so much going on here :)
 End goal: Sending a file as a byte stream over this tcp/ip implementation
 
 #### References
+ - https://datatracker.ietf.org/doc/html/rfc791/
  - https://datatracker.ietf.org/doc/html/rfc793

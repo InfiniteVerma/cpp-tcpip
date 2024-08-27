@@ -1,6 +1,8 @@
 #include "socket.h"
 #include "iostream"
+#include "ip.h"
 #include "packet.h"
+#include "iomanip"
 #include "state_machine.h"
 #include <arpa/inet.h>
 #include <bitset>
@@ -14,6 +16,69 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 using namespace std;
+
+void hexDump(char* data, int size)
+{
+    cout << " =======\nHEX DUMP \n";
+    const int bytesPerLine = 16; // Number of bytes per line in the dump
+    for (int i = 0; i < size; i += bytesPerLine) {
+        // Print the offset
+        std::cout << std::setw(8) << std::setfill('0') << std::hex << i << "  ";
+
+        // Print the hex values
+        for (int j = 0; j < bytesPerLine; ++j) {
+            if (i + j < size) {
+                std::cout << std::setw(2) << std::setfill('0') << std::hex << (static_cast<unsigned int>(static_cast<unsigned char>(data[i + j]))) << ' ';
+            } else {
+                std::cout << "   "; // Spaces for missing bytes
+            }
+        }
+
+        std::cout << " ";
+
+        // Print the ASCII representation
+        for (int j = 0; j < bytesPerLine; ++j) {
+            if (i + j < size) {
+                char c = data[i + j];
+                std::cout << (std::isprint(static_cast<unsigned char>(c)) ? c : '.');
+            }
+        }
+
+        std::cout << std::endl;
+    }
+    cout << " =======\nHEX DUMP \n";
+}
+
+unsigned int getChecksumVal(void* ipHeader)
+{
+    int length = sizeof(struct IPHeader);
+    unsigned long checksum = 0; // making as long to detect overflow.
+    char* data = (char*)ipHeader;
+
+    for(int i=0; i + 1 < length; i+= 2)
+    {
+        unsigned int word; // word == 16 bits == 2 bytes
+        memcpy(&word, data + 1, 2);
+        checksum += ntohs(word); // to convert network byte (endianness as per RFC) to host byte order
+        if(checksum > 0xffff)
+        {
+            checksum -= 0xffff;
+        }
+    }
+
+    if(length & 1) // odd meaning one byte is left
+    {
+        unsigned int word = 0;
+        memcpy(&word, data + length - 1, 1);
+        checksum += ntohs(word);
+        if(checksum > 0xffff)
+        {
+            checksum -= 0xffff;
+        }
+    }
+
+    return htons(~checksum);
+}
 
 std::bitset<EPHEMERAL_PORT_SIZE> Socket::ephemeralPortStatusSet = {0};
 int Socket::ephemeralPorts[EPHEMERAL_PORT_SIZE] = {1024, 1025, 1026, 1027, 1028}; // TODO how to dynamically do this?
@@ -66,25 +131,27 @@ Socket::bind(int p)
  */
 int Socket::connect(int serverPort) {
     // Set up the server address structure
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(serverPort);
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // Replace with actual server IP
+    //sockaddr_in serverAddress;
+    //serverAddress.sin_family = AF_INET;
+    //serverAddress.sin_port = htons(serverPort);
+    //serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // Replace with actual server IP
 
-    // Allocate an ephemeral port number if needed (may not be necessary)
-    tcb.localPortNum = Socket::allocateEphemeralPortNum(); 
+    //// Allocate an ephemeral port number if needed (may not be necessary)
+    //tcb.localPortNum = Socket::allocateEphemeralPortNum(); 
 
-    // Set up the socket for connection
-    int ret = ::connect(socketFd, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-    if (ret != 0) {
-        printf("Name: %s: Oh dear, something went wrong with connect()! error: %d, %s\n", desc.c_str(), errno, strerror(errno));
-        assert(0);
-    }
+    //// Set up the socket for connection
+    //int ret = ::connect(socketFd, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+    //if (ret != 0) {
+    //    printf("Name: %s: Oh dear, something went wrong with connect()! error: %d, %s\n", desc.c_str(), errno, strerror(errno));
+    //    assert(0);
+    //}
 
-    cout << "Connected\n";
 
     // Perform the three-way handshake
-    ret = threeWayHandshakeClient();
+    int ret = threeWayHandshakeClient();
+
+    if(ret)
+        cout << "Connected\n";
     return ret;
 }
 
@@ -101,12 +168,43 @@ int Socket::connect(int serverPort) {
 int
 Socket::threeWayHandshakeClient()
 {
+    cout << __FUNCTION__ << " BEGIN\n";
     Packet* synPacket = new Packet(tcb.localPortNum, tcb.remotePortNum);
     //const char* message = synPacket->makePacket();
 
-    const char* message = "Hello, world";
+    char message[65535];
+    memset(message, 0, sizeof(message));
+    hexDump(message, strlen(message) + sizeof(IPHeader));
 
-    send(message, strlen(message), 0);
+    IPHeader ipheader;
+    unsigned int checksumVal = getChecksumVal(&ipheader);
+    ipheader.checksum = checksumVal;
+
+    char* payload = message + sizeof(IPHeader);
+    memcpy(payload, &ipheader, sizeof(IPHeader));
+    hexDump(payload, strlen(payload) + sizeof(IPHeader));
+
+    cout << "Now copying payload\n";
+
+    char* final_payload = payload + sizeof(IPHeader);
+    strcpy(final_payload, "Helloworld");
+    //string msg = "Hello, world";
+    //char* msg = new char[100];
+    //strcpy(msg, "Hello World");
+    //memcpy(payload + sizeof(IPHeader), &msg, sizeof(msg));
+    hexDump(payload, sizeof(IPHeader) + 10);
+
+    struct sockaddr_in destAddress;
+    destAddress.sin_family = AF_INET;
+    destAddress.sin_port = htons(0); // No port for raw sockets
+    destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    cout << "Sending\n";
+    sendto(socketFd, payload, sizeof(IPHeader) + 11, 0,
+            (struct sockaddr*)&destAddress, sizeof(destAddress));
+
+    sleep(5);
+
     cout << "Sent SYN\n";
     delete synPacket;
     return 1;
@@ -119,14 +217,16 @@ Socket::threeWayHandshakeClient()
 void
 Socket::listen() // TODO support backlog queue
 {
-    //int ret = ::listen(socketFd, 1);
     cout << "Starting to listen for SYN pkts\n";
     while(1) // TODO should it be a while loop?
     {
         struct sockaddr saddr;
         socklen_t socklen = sizeof(saddr);
-        char* buffer = new char[1500];
-        ssize_t size = recvfrom(socketFd, &buffer, sizeof(buffer), 0, &saddr, &socklen); // TODO make it blocking?
+        char* buffer = new char[65535];
+        cout << "Starting recvfrom\n";
+        ssize_t size = recvfrom(socketFd, buffer, 1500, 0, &saddr, &socklen); // TODO make it blocking?
+
+        cout << "recvfrom break\n";
 
         if(size == 0)
         {
@@ -139,7 +239,13 @@ Socket::listen() // TODO support backlog queue
         }
         else
         {
-            std::cout << "Receive a packet of size: " << size << "\n";
+            cout << "Receive a packet of size: " << size << "\n";
+
+            hexDump(buffer, size);
+
+            cout << "After hex dump\n";
+            char* msg = buffer + sizeof(IPHeader);
+            cout << "Payload: " << msg << "\n"; 
         }
     }
 
@@ -150,17 +256,17 @@ void Socket::send(const char* message, size_t len, int flags) {
     cout << "Client: sending: " << message << " - len: " << len << "\n";
 
     sockaddr_in saddr = {};
-    saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(9000); // Destination port
-    saddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Destination IP
+    //saddr.sin_family = AF_INET;
+    //saddr.sin_port = htons(9000); // Destination port
+    //saddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Destination IP
 
-    // Check for invalid IP address
-    if (saddr.sin_addr.s_addr == INADDR_NONE) {
-        cout << "Invalid IP address\n";
-        return;
-    }
+    //// Check for invalid IP address
+    //if (saddr.sin_addr.s_addr == INADDR_NONE) {
+    //    cout << "Invalid IP address\n";
+    //    return;
+    //}
 
-    ssize_t bytesSent = ::sendto(socketFd, message, len, flags, (sockaddr*)&saddr, sizeof(saddr));
+    ssize_t bytesSent = sendto(socketFd, message, len, flags, (sockaddr*)&saddr, sizeof(saddr));
 
     if (bytesSent == -1) {
         printf("Name: %s: Oh dear, something went wrong with sendto()! error: %d, %s\n", desc.c_str(), errno, strerror(errno));
