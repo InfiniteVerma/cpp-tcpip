@@ -4,3 +4,5 @@ mytcp
 tags
 myclient
 myserver
+raw_client
+raw_server
