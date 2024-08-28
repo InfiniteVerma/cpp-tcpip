@@ -9,61 +9,63 @@
 #define PORT 9000
 
 void server() {
-  std::cout << "Hello from server thread\n";
-  Socket socket("Server");
+    std::cout << "Hello from server thread\n";
+    Socket socket("Server");
 
-  socket.bind(PORT);
-  socket.listen();
+    socket.bind(PORT);
+    socket.listen();
 
-  socket.debugPrint();
+    socket.debugPrint();
 
-  while (1) {
-    int clientSocket = socket.accept();
-    std::cout << "SERVER: clientSocket: " << clientSocket << "\n";
+    while (1) {
+        int clientSocket = socket.accept();
+        std::cout << "SERVER: clientSocket: " << clientSocket << "\n";
 
-    if (clientSocket == -1) {
-      printf("Oh dear, something went wrong with accept()! %s\n",
-             strerror(errno));
-      break;
+        if (clientSocket == -1) {
+            printf("Oh dear, something went wrong with accept()! %s\n",
+                   strerror(errno));
+            break;
+        }
+
+        char buffer[1024] = {0};
+        ::recv(clientSocket, buffer, sizeof(buffer), 0);
+        std::cout << "SERVER: Message from client: <" << buffer << ">"
+                  << std::endl;
+
+        if (strcmp(buffer, "CLOSE") == 0) {
+            std::cout << "Closing server\n";
+            break;
+        } else {
+            std::cout << "SERVER: buffer doesn't match close: " << buffer
+                      << "\n";
+        }
     }
-
-    char buffer[1024] = {0};
-    ::recv(clientSocket, buffer, sizeof(buffer), 0);
-    std::cout << "SERVER: Message from client: <" << buffer << ">" << std::endl;
-
-    if (strcmp(buffer, "CLOSE") == 0) {
-      std::cout << "Closing server\n";
-      break;
-    } else {
-      std::cout << "SERVER: buffer doesn't match close: " << buffer << "\n";
-    }
-  }
-  socket.close();
+    socket.close();
 }
 
 void client() {
-  std::cout << "Hello from client thread\n";
-  Socket socket("Client");
+    std::cout << "Hello from client thread\n";
+    Socket socket("Client");
 
-  int ret = socket.connect(PORT);
+    int ret = socket.connect(PORT);
 
-  socket.debugPrint();
+    socket.debugPrint();
 
-  if (ret != 0) {
-    // TODO formalize error coding
-    std::cout << "3 way handshake failed\n";
+    if (ret != 0) {
+        // TODO formalize error coding
+        std::cout << "3 way handshake failed\n";
+        socket.close();
+        return;
+    }
+
+    const char *message = "CLOSE";
+    socket.send(message, strlen(message), 0);
     socket.close();
-    return;
-  }
-
-  const char *message = "CLOSE";
-  socket.send(message, strlen(message), 0);
-  socket.close();
 }
 
 int main() {
-  std::thread serverThread(server);
-  std::thread clientThread(client);
-  clientThread.join();
-  serverThread.join();
+    std::thread serverThread(server);
+    std::thread clientThread(client);
+    clientThread.join();
+    serverThread.join();
 }

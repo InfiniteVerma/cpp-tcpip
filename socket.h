@@ -7,42 +7,42 @@
 #define EPHEMERAL_PORT_SIZE 5
 
 struct Pkt {
-  char *payload;
-  int size;
+    char *payload;
+    int size;
 
-  Pkt(char *p, int s) {
-    payload = p;
-    size = s;
-  }
+    Pkt(char *p, int s) {
+        payload = p;
+        size = s;
+    }
 };
 
 class Socket {
-public:
-  Socket(std::string s);
+  public:
+    Socket(std::string s);
 
-  void debugPrint();
+    void debugPrint();
 
-  /* Public APIs */
-  void bind(int p);
-  int connect(int p);
-  void listen();
-  void send(const char *message, size_t len, int flags);
-  void close();
-  int accept();
+    /* Public APIs */
+    void bind(int p);
+    int connect(int p);
+    void listen();
+    void send(const char *message, size_t len, int flags);
+    void close();
+    int accept();
 
-  static int allocateEphemeralPortNum();
-  static void freeEphemeralPortNum(int portNum);
+    static int allocateEphemeralPortNum();
+    static void freeEphemeralPortNum(int portNum);
 
-private:
-  int threeWayHandshakeClient();
-  Pkt getSYNPacket();
+  private:
+    int threeWayHandshakeClient();
+    Pkt getSYNPacket();
 
-  int socketFd;
-  TCB tcb;
-  std::string desc;
+    int socketFd;
+    TCB tcb;
+    std::string desc;
 
-  static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
-  static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
+    static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
+    static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
 };
 
 #endif
