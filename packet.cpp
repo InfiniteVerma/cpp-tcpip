@@ -1,9 +1,10 @@
 #include "packet.h"
+
 #include <arpa/inet.h>
+
 #include <cstring>
 
-Packet::Packet(int sourcePort, int destPort)
-    : tcpHeader(sourcePort, destPort), size(0) {}
+Packet::Packet(int sourcePort, int destPort) : tcpHeader(sourcePort, destPort), size(0) {}
 
 Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
     cout << "Packet constructor, parsing the pkt\n";
@@ -65,13 +66,16 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     // set ack bit and pass seq number given by SYN in ack field
     packet.setAckNumber(pktData.nextExpectedSeqNumber);
 
-    packet.setTCPFlags((1 << 1) | (1 << 4)); // set SYN and ACK
+    packet.setTCPFlags((1 << 1) | (1 << 4));  // set SYN and ACK
+    packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
+    packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
+
+    cout << "Sending packet with source ip: " << pktData.sourceIp << "\n";
+    cout << "Sending packet with dest ip: " << pktData.destIp << "\n";
 
     return packet;
 }
 
-bool Packet::isSYNPacket(Packet packet) {
-    return (packet.tcpHeader.data_offset_and_flags > 1);
-}
+bool Packet::isSYNPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 1); }
 
 Packet::~Packet() {}

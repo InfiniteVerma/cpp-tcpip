@@ -1,5 +1,10 @@
-BasedOnStyle: LLVM
+#BasedOnStyle: LLVM
+BasedOnStyle: Google
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 
+# .clang-format file
+ColumnLimit: 120  # Increase the column limit as needed
+BreakBeforeBraces: Attach
+PenaltyBreakBeforeFirstCallParameter: 1000

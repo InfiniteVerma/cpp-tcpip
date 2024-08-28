@@ -1,18 +1,19 @@
 #ifndef __RFC793_TCB__
 #define __RFC793_TCB__
 
-#include "common.h"
-#include "state_machine.h"
 #include <queue>
 
+#include "common.h"
+#include "state_machine.h"
+
 class TCB {
-  public:
-    UINT16 localPortNum;                    /* local port num */
-    UINT16 remotePortNum;                   /* remote port num */
-    char *sendBuf;                          /* send buffer */
-    char *recvBuf;                          /* receive buffer */
-    std::queue<char *> retransmissionQueue; // TODO MAX SIZE?
-    char *currentSegment;                   // TODO what's this?
+   public:
+    UINT16 localPortNum;                     /* local port num */
+    UINT16 remotePortNum;                    /* remote port num */
+    char *sendBuf;                           /* send buffer */
+    char *recvBuf;                           /* receive buffer */
+    std::queue<char *> retransmissionQueue;  // TODO MAX SIZE?
+    char *currentSegment;                    // TODO what's this?
 
     // Page 20
     /* send sequence variables */

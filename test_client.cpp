@@ -1,9 +1,11 @@
-#include "socket.h"
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstring>
 #include <iostream>
-#include <sys/socket.h>
-#include <unistd.h>
+
+#include "socket.h"
 
 #define PORT 9000
 

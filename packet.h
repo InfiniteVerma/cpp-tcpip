@@ -7,12 +7,11 @@
 struct PktData {
     int localPortNum;
     int remotePortNum;
-    int nextExpectedSeqNumber; // 1 + seq get from older pkt
+    int nextExpectedSeqNumber;  // 1 + seq get from older pkt
     const char *sourceIp;
     const char *destIp;
 
-    PktData(int localP, int remoteP, int ackNo, const char *sourceIp,
-            const char *destIp) {
+    PktData(int localP, int remoteP, int ackNo, const char *sourceIp, const char *destIp) {
         localPortNum = localP;
         remotePortNum = remoteP;
         nextExpectedSeqNumber = ackNo;
@@ -25,7 +24,7 @@ struct PktData {
  * Constructs a packet (payload + header)
  */
 class Packet {
-  public:
+   public:
     Packet(int sourcePort, int destPort);
     Packet(char *rawPacket, int size);
     ~Packet();
@@ -46,7 +45,7 @@ class Packet {
     static Packet getSYNPacket(PktData pktData);
     static Packet getSynAckPacket(PktData pktData);
 
-  private:
+   private:
     IPHeader ipHeader;
     TCPHeader tcpHeader;
     int size;

@@ -1,9 +1,10 @@
 #ifndef __RFC793_STATEMACHINE__
 #define __RFC793_STATEMACHINE__
 
-#include "packet.h"
 #include <ostream>
 #include <vector>
+
+#include "packet.h"
 enum ConnectionState {
     LISTEN = 0,
     SYN_SENT,
@@ -19,7 +20,7 @@ enum ConnectionState {
 };
 
 typedef bool (*CHECKER)(Packet);
-typedef Packet (*ACTION)(PktData); // TODO?
+typedef Packet (*ACTION)(PktData);  // TODO?
 
 struct StateMData {
     ConnectionState currentState;
@@ -27,8 +28,7 @@ struct StateMData {
     ACTION action;
     ConnectionState nextState;
 
-    StateMData(ConnectionState currS, CHECKER checker, ACTION action,
-               ConnectionState nextS) {
+    StateMData(ConnectionState currS, CHECKER checker, ACTION action, ConnectionState nextS) {
         currentState = currS;
         this->checker = checker;
         nextState = nextS;
@@ -36,20 +36,18 @@ struct StateMData {
     }
 };
 
-const vector<StateMData> FSM = {
-    StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
-    StateMData(LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket,
-               SYN_RECEIVED)};
+const vector<StateMData> FSM = {StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
+                                StateMData(LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket, SYN_RECEIVED)};
 
 class TCBStateM {
-  public:
+   public:
     TCBStateM();
 
     ConnectionState getState();
     ACTION updateState(char *pkt, int size);
     void updateState(ConnectionState);
 
-  private:
+   private:
     ConnectionState state;
 };
 

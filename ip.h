@@ -1,9 +1,10 @@
 #ifndef __RFC793_IP__
 #define __RFC793_IP__
 
-#include "common.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+
+#include "common.h"
 
 /*
  *   0                   1                   2                   3
@@ -30,7 +31,7 @@ struct IPHeader {
     UINT8 type_of_service;
     UINT16 total_length;
     UINT16 identification;
-    UINT16 fragment_offset; // includes 3 bits of flags
+    UINT16 fragment_offset;  // includes 3 bits of flags
     UINT8 ttl;
     UINT8 protocol;
     UINT16 checksum;
@@ -39,17 +40,17 @@ struct IPHeader {
     // TODO options?
 
     IPHeader() {
-        idl = 5; // TODO calculate this
+        idl = 5;  // TODO calculate this
         version = 4;
         type_of_service = 0;
-        total_length = 0;              // Will be updated after payload is added
-        identification = htons(54321); // what is this?
+        total_length = 0;               // Will be updated after payload is added
+        identification = htons(54321);  // what is this?
         fragment_offset = 0;
         ttl = 64;
         protocol = IPPROTO_RAW;
-        checksum = 0; // Will be updated later
+        checksum = 0;  // Will be updated later
         source_addr = inet_addr("127.0.0.1");
-        dest_addr = inet_addr("127.0.0.1"); // TODO ?
+        dest_addr = inet_addr("127.0.0.1");  // TODO ?
     }
 };
 

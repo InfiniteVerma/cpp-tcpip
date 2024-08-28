@@ -45,7 +45,7 @@ struct TCPHeader {
      *  - SYN:  Synchronize sequence numbers
      *  - FIN:  No more data from sender
      */
-    UINT16 data_offset_and_flags; // MSB 4 bits + 6 bits 0 + 6 bits of flag
+    UINT16 data_offset_and_flags;  // MSB 4 bits + 6 bits 0 + 6 bits of flag
 
     UINT16 window;
     UINT16 checksum;

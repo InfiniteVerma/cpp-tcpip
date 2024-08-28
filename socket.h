@@ -1,15 +1,16 @@
 #ifndef __RFC793_SOCKET__
 #define __RFC793_SOCKET__
 
+#include <bitset>
+
 #include "packet.h"
 #include "tcb.h"
 #include "tcp.h"
-#include <bitset>
 
 #define EPHEMERAL_PORT_SIZE 5
 
 class Socket {
-  public:
+   public:
     Socket(std::string s, const char *ip, int port);
 
     void setDestIp(const char *ip);
@@ -26,7 +27,7 @@ class Socket {
     static int allocateEphemeralPortNum();
     static void freeEphemeralPortNum(int portNum);
 
-  private:
+   private:
     int threeWayHandshakeClient();
     // Packet getSYNPacket();
 
@@ -39,7 +40,9 @@ class Socket {
     void receivePacketNonBlocking(char *, int &);
     int receivePacketBlocking(char *, int &, int seconds);
 
-    static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
+    void sendPacket(Packet pkt);
+
+    static int ephemeralPorts[EPHEMERAL_PORT_SIZE];  // TODO 10?
     static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
 
     queue<Packet> retransmissionQueue;
