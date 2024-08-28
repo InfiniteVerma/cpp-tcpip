@@ -22,11 +22,13 @@ Continuously iterating on it since there's so much going on here :)
 - [x] Communication over raw sockets
     - [x] IP Header class
     - [x] Test and verify packet exchange
-- [ ] 3 way handshake init
+- [x] 3 way handshake init
     - [x] Add TCP segment header
     - [x] Basic FSM driver logic (using fn pointers?)
+    - [x] One way FSM
+    - [x] Payload -> TCP Segment + Payload -> IP Header + TCP Segment + Payload
+- [ ] Proper handshake
     - [ ] Full state machine
-    - [ ] Payload -> TCP Segment + Payload -> IP Header + TCP Segment + Payload
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
 - [ ] Retransmission queue + Timer logic
     - [ ] Test 3 way handshake with this
