@@ -36,8 +36,10 @@ struct StateMData {
     }
 };
 
-const vector<StateMData> FSM = {StateMData(
-    LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket, SYN_RECEIVED)};
+const vector<StateMData> FSM = {
+    StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
+    StateMData(LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket,
+               SYN_RECEIVED)};
 
 class TCBStateM {
   public:

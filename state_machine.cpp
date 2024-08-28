@@ -9,6 +9,11 @@ ConnectionState TCBStateM::getState() { return state; }
 
 ACTION TCBStateM::updateState(char *pkt, int size) {
     cout << __FUNCTION__ << " BEGIN\n";
+
+    if (!pkt && state == CLOSED) // TODO better way?
+    {
+        return FSM[0].action;
+    }
     // Parse packet
     Packet parsedPacket = Packet(pkt, size);
 

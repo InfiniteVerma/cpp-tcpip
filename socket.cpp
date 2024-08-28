@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
+#include <ctime>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/socket.h>
@@ -134,8 +135,11 @@ int Socket::threeWayHandshakeClient() {
     destAddress.sin_port = htons(0); // No port for raw sockets
     destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    Packet pkt =
-        Packet::getSYNPacket(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+    tcb.myState.updateState(CLOSED); // To update FSM
+
+    ACTION firstAction = tcb.myState.updateState(NULL, 0);
+
+    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
 
     const char *payload = pkt.makePacket();
     int size = pkt.getSize();
@@ -144,13 +148,44 @@ int Socket::threeWayHandshakeClient() {
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress,
            sizeof(destAddress));
 
-    tcb.myState.updateState(SYN_SENT);
-    debugPrint();
-
-    delete payload;
-
-    sleep(2);
     cout << "1st SYN sent\n";
+    debugPrint();
+    cout << "Starting timer\n";
+
+    time_t t = time(0);
+
+    while (
+        1) // block till say 1 second and if a packet doesn't arrive, stop FSM?
+    {
+        time_t curr = time(0);
+        if (difftime(curr, t) > 2) {
+            cout << "2 seconds elapsed, no packet received. Stopping "
+                    "handshake\n";
+            return 0;
+        }
+
+        char *buffer = new char[65535];
+        int size = 0;
+        receivePacketNonBlocking(buffer, size);
+        Utils::hexDump(buffer, size);
+        cout << "After hex dump\n";
+        cout << "Server sent a packet back!!!\n";
+        // char *msg = buffer + sizeof(IPHeader);
+        // cout << "Payload: " << msg << "\n";
+        // cout << "Parsing into packet type\n";
+        // Packet pkt = Packet(buffer, size);
+        cout << "Sending to update state\n";
+        ACTION nextAction = tcb.myState.updateState(buffer, size);
+
+        cout << "Calling nextAction\n";
+        Packet pkt =
+            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+
+        debugPrint();
+        break;
+    }
+
+    // delete payload; should be done when receving ACK!!
 
     // TODO start timer, retransmission queue
 
@@ -167,45 +202,46 @@ void Socket::listen() // TODO support backlog queue
     tcb.myState.updateState(LISTEN);
     while (1) // TODO should it be a while loop?
     {
-
-        struct sockaddr saddr;
-        socklen_t socklen = sizeof(saddr);
         char *buffer = new char[65535];
-        cout << "Starting recvfrom\n";
-        ssize_t size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
-                                &socklen); // TODO make it blocking?
+        int size = 0;
+        receivePacketNonBlocking(buffer, size);
+        Utils::hexDump(buffer, size);
 
-        cout << "recvfrom break\n";
+        cout << "After hex dump\n";
+        // char *msg = buffer + sizeof(IPHeader);
+        // cout << "Payload: " << msg << "\n";
+        // cout << "Parsing into packet type\n";
+        // Packet pkt = Packet(buffer, size);
+        cout << "Sending to update state\n";
+        ACTION nextAction = tcb.myState.updateState(buffer, size);
 
-        if (size == 0) {
-            // peer has performed an orderly shutdown
-        } else if (size == -1) {
-            printf("Name: %s: Oh dear, something went wrong with recvfrom()! "
-                   "error: "
-                   "%d, %s\n",
-                   desc.c_str(), errno, strerror(errno));
-            assert(0);
-        } else {
-            cout << "Receive a packet of size: " << size << "\n";
+        cout << "Calling nextAction\n";
+        Packet pkt =
+            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
 
-            // FUNC func = tcb.myState.updateState();
-            Utils::hexDump(buffer, size);
+        debugPrint();
+    }
+}
 
-            cout << "After hex dump\n";
-            // char *msg = buffer + sizeof(IPHeader);
-            // cout << "Payload: " << msg << "\n";
-            // cout << "Parsing into packet type\n";
-            // Packet pkt = Packet(buffer, size);
-            cout << "Sending to update state\n";
-            ACTION nextAction = tcb.myState.updateState(buffer, size);
+void Socket::receivePacketNonBlocking(char *buffer, int &size) {
+    struct sockaddr saddr;
+    socklen_t socklen = sizeof(saddr);
+    cout << "Starting recvfrom\n";
+    size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
+                    &socklen); // TODO make it blocking?
 
-            cout << "Calling nextAction\n";
-            Packet pkt =
-                nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+    cout << "recvfrom break\n";
 
-            cout << " TODO send the SYN/ACK\n";
-            debugPrint();
-        }
+    if (size == 0) {
+        // peer has performed an orderly shutdown
+    } else if (size == -1) {
+        printf("Name: %s: Oh dear, something went wrong with recvfrom()! "
+               "error: "
+               "%d, %s\n",
+               desc.c_str(), errno, strerror(errno));
+        assert(0);
+    } else {
+        cout << "Receive a packet of size: " << size << "\n";
     }
 }
 

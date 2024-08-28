@@ -33,6 +33,8 @@ class Socket {
     TCB tcb;
     std::string desc;
 
+    void receivePacketNonBlocking(char *, int &);
+
     static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
     static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
 
