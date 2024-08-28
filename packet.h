@@ -4,6 +4,18 @@
 #include "ip.h"
 #include "tcp.h"
 
+struct PktData {
+    int localPortNum;
+    int remotePortNum;
+    int nextExpectedSeqNumber; // 1 + seq get from older pkt
+
+    PktData(int localP, int remoteP, int ackNo) {
+        localPortNum = localP;
+        remotePortNum = remoteP;
+        nextExpectedSeqNumber = ackNo;
+    }
+};
+
 /*
  * Constructs a packet (payload + header)
  */
@@ -15,16 +27,19 @@ class Packet {
 
     const char *makePacket();
     int getSize();
-
     int getSeq();
 
-    static Packet getSYNPacket(int localPort, int removePort);
+    // allowed modifiers
+    void setSequenceNumber(int);
+    void setAckNumber(int);
+    void setTCPFlags(int);
 
     // Checkers
     static bool isSYNPacket(Packet);
 
     // Actions
-    static Packet getSynAckPacket(int localPort, int remotePort);
+    static Packet getSYNPacket(PktData pktData);
+    static Packet getSynAckPacket(PktData pktData);
 
   private:
     IPHeader ipHeader;

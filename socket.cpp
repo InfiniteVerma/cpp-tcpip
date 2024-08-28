@@ -1,6 +1,7 @@
 #include "socket.h"
 #include "iostream"
 #include "ip.h"
+#include "packet.h"
 #include "state_machine.h"
 #include "tcb.h"
 #include <arpa/inet.h>
@@ -133,7 +134,8 @@ int Socket::threeWayHandshakeClient() {
     destAddress.sin_port = htons(0); // No port for raw sockets
     destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    Packet pkt = Packet::getSYNPacket(tcb.localPortNum, tcb.remotePortNum);
+    Packet pkt =
+        Packet::getSYNPacket(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
 
     const char *payload = pkt.makePacket();
     int size = pkt.getSize();
@@ -143,6 +145,7 @@ int Socket::threeWayHandshakeClient() {
            sizeof(destAddress));
 
     tcb.myState.updateState(SYN_SENT);
+    debugPrint();
 
     delete payload;
 
@@ -197,11 +200,16 @@ void Socket::listen() // TODO support backlog queue
             ACTION nextAction = tcb.myState.updateState(buffer, size);
 
             cout << "Calling nextAction\n";
-            nextAction(tcb.localPortNum, tcb.remotePortNum);
+            Packet pkt =
+                nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+
+            cout << " TODO send the SYN/ACK\n";
+            debugPrint();
         }
     }
 }
 
+// TODO to be used after handshake completes
 void Socket::send(const char *message, size_t len, int flags) {
     cout << "Client: sending: " << message << " - len: " << len << "\n";
 

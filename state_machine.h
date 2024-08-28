@@ -19,7 +19,7 @@ enum ConnectionState {
 };
 
 typedef bool (*CHECKER)(Packet);
-typedef Packet (*ACTION)(int, int); // TODO?
+typedef Packet (*ACTION)(PktData); // TODO?
 
 struct StateMData {
     ConnectionState currentState;
