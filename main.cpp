@@ -10,9 +10,9 @@
 
 void server() {
     std::cout << "Hello from server thread\n";
-    Socket socket("Server");
+    Socket socket("Server", "192.168.1.1", PORT);
 
-    socket.bind(PORT);
+    socket.bind();
     socket.listen();
 
     socket.debugPrint();
@@ -45,9 +45,9 @@ void server() {
 
 void client() {
     std::cout << "Hello from client thread\n";
-    Socket socket("Client");
+    Socket socket("Client", "192.168.1.2", PORT);
 
-    int ret = socket.connect(PORT);
+    int ret = socket.connect();
 
     socket.debugPrint();
 

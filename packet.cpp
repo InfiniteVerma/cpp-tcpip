@@ -1,4 +1,5 @@
 #include "packet.h"
+#include <arpa/inet.h>
 #include <cstring>
 
 Packet::Packet(int sourcePort, int destPort)
@@ -47,6 +48,9 @@ Packet Packet::getSYNPacket(PktData pktData) {
 
     packet.setSequenceNumber(1);
     packet.setTCPFlags((1 << 1));
+
+    packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
+    packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
 
     return packet;
 }

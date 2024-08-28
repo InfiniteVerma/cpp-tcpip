@@ -61,9 +61,12 @@ std::bitset<EPHEMERAL_PORT_SIZE> Socket::ephemeralPortStatusSet = {0};
 int Socket::ephemeralPorts[EPHEMERAL_PORT_SIZE] = {
     1024, 1025, 1026, 1027, 1028}; // TODO how to dynamically do this?
 
-Socket::Socket(std::string desc) {
+Socket::Socket(std::string desc, const char *ip, int port) {
     this->desc = desc;
     socketFd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+
+    this->sourceIp = ip;
+    tcb.localPortNum = port;
 
     if (socketFd == -1) {
         printf(
@@ -72,15 +75,17 @@ Socket::Socket(std::string desc) {
             desc.c_str(), errno, strerror(errno));
         assert(0);
     }
+
     // socketFd = socket(AF_INET, SOCK_STREAM, 0);
 }
 
-void Socket::bind(int p) {
-    tcb.localPortNum = p;
+void Socket::setDestIp(const char *destIp) { this->destIp = destIp; }
+
+void Socket::bind() {
 
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = inet_addr("0.0.0.0");
+    serverAddress.sin_addr.s_addr = inet_addr(sourceIp);
 
     int ret = ::bind(socketFd, (struct sockaddr *)&serverAddress,
                      sizeof(serverAddress));
@@ -107,7 +112,21 @@ void Socket::bind(int p) {
  * 1. connect to the TCP (low level)
  * 2. Perform the 3-way handshake
  */
-int Socket::connect(int serverPort) {
+int Socket::connect() {
+
+    // bind here too
+    struct sockaddr_in clientAddress;
+    clientAddress.sin_family = AF_INET;
+    clientAddress.sin_addr.s_addr = inet_addr(sourceIp); // Client IP
+    clientAddress.sin_port = htons(0);                   // Any port
+
+    if (::bind(socketFd, (struct sockaddr *)&clientAddress,
+               sizeof(clientAddress)) < 0) {
+        perror("Socket bind failed");
+        ::close(socketFd);
+        assert(0);
+        return 1;
+    }
 
     int ret = threeWayHandshakeClient();
 
@@ -133,13 +152,14 @@ int Socket::threeWayHandshakeClient() {
     struct sockaddr_in destAddress;
     destAddress.sin_family = AF_INET;
     destAddress.sin_port = htons(0); // No port for raw sockets
-    destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+    destAddress.sin_addr.s_addr = inet_addr(sourceIp);
 
     tcb.myState.updateState(CLOSED); // To update FSM
 
     ACTION firstAction = tcb.myState.updateState(NULL, 0);
 
-    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+    Packet pkt = firstAction(
+        PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
 
     const char *payload = pkt.makePacket();
     int size = pkt.getSize();
@@ -178,8 +198,12 @@ int Socket::threeWayHandshakeClient() {
         ACTION nextAction = tcb.myState.updateState(buffer, size);
 
         cout << "Calling nextAction\n";
-        Packet pkt =
-            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+        if (!nextAction) {
+            cout << "nextAction is NULL?";
+            assert(0);
+        }
+        Packet pkt = nextAction(
+            PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
 
         debugPrint();
         break;
@@ -216,8 +240,8 @@ void Socket::listen() // TODO support backlog queue
         ACTION nextAction = tcb.myState.updateState(buffer, size);
 
         cout << "Calling nextAction\n";
-        Packet pkt =
-            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0));
+        Packet pkt = nextAction(
+            PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
 
         debugPrint();
     }
@@ -226,11 +250,10 @@ void Socket::listen() // TODO support backlog queue
 void Socket::receivePacketNonBlocking(char *buffer, int &size) {
     struct sockaddr saddr;
     socklen_t socklen = sizeof(saddr);
-    cout << "Starting recvfrom\n";
     size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
                     &socklen); // TODO make it blocking?
 
-    cout << "recvfrom break\n";
+    cout << "recvfrom returned size: " << size << "\n";
 
     if (size == 0) {
         // peer has performed an orderly shutdown

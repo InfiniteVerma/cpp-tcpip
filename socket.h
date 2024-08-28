@@ -10,13 +10,14 @@
 
 class Socket {
   public:
-    Socket(std::string s);
+    Socket(std::string s, const char *ip, int port);
 
+    void setDestIp(const char *ip);
     void debugPrint();
 
     /* Public APIs */
-    void bind(int p);
-    int connect(int p);
+    void bind();
+    int connect();
     void listen();
     void send(const char *message, size_t len, int flags);
     void close();
@@ -32,6 +33,8 @@ class Socket {
     int socketFd;
     TCB tcb;
     std::string desc;
+    const char *sourceIp;
+    const char *destIp;
 
     void receivePacketNonBlocking(char *, int &);
 

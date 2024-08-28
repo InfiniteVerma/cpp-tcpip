@@ -8,10 +8,11 @@ TCBStateM::TCBStateM() { state = CLOSED; }
 ConnectionState TCBStateM::getState() { return state; }
 
 ACTION TCBStateM::updateState(char *pkt, int size) {
-    cout << __FUNCTION__ << " BEGIN\n";
+    cout << __FUNCTION__ << " BEGIN current State: " << state << "\n";
 
     if (!pkt && state == CLOSED) // TODO better way?
     {
+        state = SYN_SENT;
         return FSM[0].action;
     }
     // Parse packet
@@ -28,6 +29,7 @@ ACTION TCBStateM::updateState(char *pkt, int size) {
             }
         }
     }
+    cout << "Could not find a valid ACTION, returning NULL\n";
     return NULL;
 
     ///*

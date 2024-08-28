@@ -8,11 +8,16 @@ struct PktData {
     int localPortNum;
     int remotePortNum;
     int nextExpectedSeqNumber; // 1 + seq get from older pkt
+    const char *sourceIp;
+    const char *destIp;
 
-    PktData(int localP, int remoteP, int ackNo) {
+    PktData(int localP, int remoteP, int ackNo, const char *sourceIp,
+            const char *destIp) {
         localPortNum = localP;
         remotePortNum = remoteP;
         nextExpectedSeqNumber = ackNo;
+        this->sourceIp = sourceIp;
+        this->destIp = destIp;
     }
 };
 

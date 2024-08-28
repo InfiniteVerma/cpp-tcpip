@@ -7,11 +7,17 @@
 
 #define PORT 9000
 
+/*
+ * Server: 192.168.1.1
+ * Client: 192.168.1.2
+ */
+
 void server() {
     std::cout << "Hello from server thread\n";
-    Socket socket("Server");
+    Socket socket("Server", "192.168.1.1", PORT);
 
-    socket.bind(PORT);
+    socket.setDestIp("192.168.1.2");
+    socket.bind();
     socket.listen();
 
     socket.debugPrint();
