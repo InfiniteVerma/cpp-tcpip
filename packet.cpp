@@ -1,10 +1,8 @@
 #include "packet.h"
 #include <cstring>
 
-Packet::Packet(int sourcePort, int destPort) {
-  tcpHeader.source_port = sourcePort;
-  tcpHeader.dest_port = destPort;
-}
+Packet::Packet(int sourcePort, int destPort)
+    : tcpHeader(sourcePort, destPort) {}
 
 const char *Packet::makePacket() {
   const char *buffer = new char[16];

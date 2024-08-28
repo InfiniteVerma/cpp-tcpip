@@ -52,9 +52,9 @@ struct TCPHeader {
   UINT16 urgent_pointer;
   // UINT8 options; // TODO. should be multiples of 8 ideally?
 
-  TCPHeader() {
-    source_port = 0;
-    dest_port = 0;
+  TCPHeader(int source_p, int dest_p) {
+    source_port = source_p;
+    dest_port = dest_p;
     seq_number = 0;
     ack_number = 0;
     data_offset_and_flags = 0;

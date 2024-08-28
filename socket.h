@@ -6,6 +6,16 @@
 
 #define EPHEMERAL_PORT_SIZE 5
 
+struct Pkt {
+  char *payload;
+  int size;
+
+  Pkt(char *p, int s) {
+    payload = p;
+    size = s;
+  }
+};
+
 class Socket {
 public:
   Socket(std::string s);
@@ -25,6 +35,8 @@ public:
 
 private:
   int threeWayHandshakeClient();
+  Pkt getSYNPacket();
+
   int socketFd;
   TCB tcb;
   std::string desc;

@@ -1,5 +1,4 @@
 #include "socket.h"
-#include "iomanip"
 #include "iostream"
 #include "ip.h"
 #include "packet.h"
@@ -15,40 +14,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 using namespace std;
-
-void hexDump(char *data, int size) {
-  cout << " =======\nHEX DUMP \n";
-  const int bytesPerLine = 16; // Number of bytes per line in the dump
-  for (int i = 0; i < size; i += bytesPerLine) {
-    // Print the offset
-    std::cout << std::setw(8) << std::setfill('0') << std::hex << i << "  ";
-
-    // Print the hex values
-    for (int j = 0; j < bytesPerLine; ++j) {
-      if (i + j < size) {
-        std::cout << std::setw(2) << std::setfill('0') << std::hex
-                  << (static_cast<unsigned int>(
-                         static_cast<unsigned char>(data[i + j])))
-                  << ' ';
-      } else {
-        std::cout << "   "; // Spaces for missing bytes
-      }
-    }
-
-    std::cout << " ";
-
-    // Print the ASCII representation
-    for (int j = 0; j < bytesPerLine; ++j) {
-      if (i + j < size) {
-        char c = data[i + j];
-        std::cout << (std::isprint(static_cast<unsigned char>(c)) ? c : '.');
-      }
-    }
-
-    std::cout << std::endl;
-  }
-  cout << " =======\nHEX DUMP \n";
-}
 
 unsigned int getChecksumVal(void *ipHeader) {
   int length = sizeof(struct IPHeader);
@@ -175,45 +140,50 @@ int Socket::connect(int serverPort) {
  */
 int Socket::threeWayHandshakeClient() {
   cout << __FUNCTION__ << " BEGIN\n";
-  Packet *synPacket = new Packet(tcb.localPortNum, tcb.remotePortNum);
-  // const char* message = synPacket->makePacket();
-
-  char message[65535];
-  memset(message, 0, sizeof(message));
-  hexDump(message, strlen(message) + sizeof(IPHeader));
-
-  IPHeader ipheader;
-  unsigned int checksumVal = getChecksumVal(&ipheader);
-  ipheader.checksum = checksumVal;
-
-  char *payload = message + sizeof(IPHeader);
-  memcpy(payload, &ipheader, sizeof(IPHeader));
-  hexDump(payload, strlen(payload) + sizeof(IPHeader));
-
-  cout << "Now copying payload\n";
-
-  char *final_payload = payload + sizeof(IPHeader);
-  strcpy(final_payload, "Helloworld");
-  // string msg = "Hello, world";
-  // char* msg = new char[100];
-  // strcpy(msg, "Hello World");
-  // memcpy(payload + sizeof(IPHeader), &msg, sizeof(msg));
-  hexDump(payload, sizeof(IPHeader) + 10);
 
   struct sockaddr_in destAddress;
   destAddress.sin_family = AF_INET;
   destAddress.sin_port = htons(0); // No port for raw sockets
   destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-  cout << "Sending\n";
-  sendto(socketFd, payload, sizeof(IPHeader) + 11, 0,
-         (struct sockaddr *)&destAddress, sizeof(destAddress));
+  Pkt pkt = getSYNPacket();
 
-  sleep(5);
+  cout << "Sending 1st SYN\n";
+  sendto(socketFd, pkt.payload, pkt.size, 0, (struct sockaddr *)&destAddress,
+         sizeof(destAddress));
 
-  cout << "Sent SYN\n";
-  delete synPacket;
+  delete pkt.payload;
+
+  sleep(2);
+  cout << "1st SYN sent\n";
+
+  // TODO start timer, retransmission queue
+
   return 1;
+}
+
+Pkt Socket::getSYNPacket() {
+  char *payload = new char[65535];
+
+  IPHeader ipheader;
+  ipheader.checksum = getChecksumVal(&ipheader);
+
+  memcpy(payload, &ipheader, sizeof(IPHeader));
+
+  TCPHeader tcpHeader(tcb.localPortNum, tcb.remotePortNum);
+  tcpHeader.seq_number = 111;
+  tcpHeader.data_offset_and_flags = (1 << 1); // setting SYN flag
+
+  char *ptr = payload + sizeof(IPHeader);
+  memcpy(ptr, &tcpHeader, sizeof(TCPHeader));
+
+  ptr += sizeof(TCPHeader);
+  strcpy(ptr, "Helloworld");
+
+  int size = sizeof(IPHeader) + sizeof(TCPHeader) + 10;
+  cout << "Sending packet of size: " << size << "\n";
+  Utils::hexDump(payload, size);
+  return Pkt(payload, size);
 }
 
 /*
@@ -229,7 +199,7 @@ void Socket::listen() // TODO support backlog queue
     socklen_t socklen = sizeof(saddr);
     char *buffer = new char[65535];
     cout << "Starting recvfrom\n";
-    ssize_t size = recvfrom(socketFd, buffer, 1500, 0, &saddr,
+    ssize_t size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
                             &socklen); // TODO make it blocking?
 
     cout << "recvfrom break\n";
@@ -244,7 +214,7 @@ void Socket::listen() // TODO support backlog queue
     } else {
       cout << "Receive a packet of size: " << size << "\n";
 
-      hexDump(buffer, size);
+      Utils::hexDump(buffer, size);
 
       cout << "After hex dump\n";
       char *msg = buffer + sizeof(IPHeader);
