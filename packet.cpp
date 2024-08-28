@@ -4,6 +4,17 @@
 Packet::Packet(int sourcePort, int destPort)
     : tcpHeader(sourcePort, destPort), size(0) {}
 
+Packet::Packet(char* rawPacket, int size) : tcpHeader(0, 0)
+{
+    cout << "Packet constructor, parsing the pkt\n";
+    memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
+    memcpy(&tcpHeader, rawPacket + sizeof(IPHeader), sizeof(TCPHeader));
+    cout << "Memcpy done\n";
+
+    cout << "flags set: " << tcpHeader.data_offset_and_flags << "\n";
+    cout << "sequence no: " << tcpHeader.seq_number << "\n";
+}
+
 const char *Packet::makePacket() {
     char *payload = new char[65535];
 
@@ -11,7 +22,7 @@ const char *Packet::makePacket() {
 
     memcpy(payload, &ipHeader, sizeof(IPHeader));
 
-    tcpHeader.seq_number = 111;
+    tcpHeader.seq_number = 1;
     tcpHeader.data_offset_and_flags = (1 << 1); // setting SYN flag
 
     char *ptr = payload + sizeof(IPHeader);
@@ -23,6 +34,12 @@ const char *Packet::makePacket() {
     Utils::hexDump(payload, size);
 
     return payload;
+}
+
+int
+Packet::getSize()
+{
+    return size;
 }
 
 Packet::~Packet() {}

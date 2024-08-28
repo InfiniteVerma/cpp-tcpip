@@ -1,8 +1,7 @@
 #include "socket.h"
 #include "iostream"
 #include "ip.h"
-#include "state_machine.h"
-#include "tcp.h"
+#include "tcb.h"
 #include <arpa/inet.h>
 #include <bitset>
 #include <cassert>
@@ -209,6 +208,8 @@ void Socket::listen() // TODO support backlog queue
             cout << "After hex dump\n";
             char *msg = buffer + sizeof(IPHeader);
             cout << "Payload: " << msg << "\n";
+            cout << "Parsing into packet type\n";
+            Packet pkt = Packet(buffer, size);
         }
     }
 

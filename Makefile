@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -Wall -g -Werror -I.
 
 # List of source files
-SRC = packet.cpp socket.cpp tcb.cpp state_machine.cpp
+SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp
 
 #all: myserver myclient 
 # List of object files

@@ -1,5 +1,5 @@
-#ifndef __RFC793_TCP__
-#define __RFC793_TCP__
+#ifndef __RFC793_TCB__
+#define __RFC793_TCB__
 
 #include "common.h"
 #include "state_machine.h"

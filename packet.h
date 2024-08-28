@@ -10,14 +10,15 @@
 class Packet {
   public:
     Packet(int sourcePort, int destPort);
+    Packet(char* rawPacket, int size);
     ~Packet();
 
     const char *makePacket();
     int getSize();
 
   private:
-    TCPHeader tcpHeader;
     IPHeader ipHeader;
+    TCPHeader tcpHeader;
     int size;
 };
 
