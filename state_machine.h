@@ -3,32 +3,31 @@
 
 #include <ostream>
 enum ConnectionState {
-    LISTEN = 0,
-    SYN_SENT,
-    SYN_RECEIVED,
-    ESTABLISHED,
-    FIN_WAIT_1,
-    FIN_WAIT_2,
-    CLOSE_WAIT,
-    CLOSING,
-    LAST_ACK,
-    TIME_WAIT,
-    CLOSED
+  LISTEN = 0,
+  SYN_SENT,
+  SYN_RECEIVED,
+  ESTABLISHED,
+  FIN_WAIT_1,
+  FIN_WAIT_2,
+  CLOSE_WAIT,
+  CLOSING,
+  LAST_ACK,
+  TIME_WAIT,
+  CLOSED
 };
-
 
 class TCBStateM {
 public:
-    TCBStateM();
+  TCBStateM();
 
-    ConnectionState getState();
-    void updateState();
-    void updateState(ConnectionState);
+  ConnectionState getState();
+  void updateState(char *pkt);
+  void updateState(ConnectionState);
 
 private:
-    ConnectionState state;
+  ConnectionState state;
 };
 
-std::ostream& operator<<(std::ostream& os, const ConnectionState& state);
+std::ostream &operator<<(std::ostream &os, const ConnectionState &state);
 
 #endif

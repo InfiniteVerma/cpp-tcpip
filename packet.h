@@ -30,56 +30,53 @@
  */
 
 struct TCPHeader {
-    UINT16 source_port;
-    UINT16 dest_port;
-    UINT32 seq_number;
-    UINT32 ack_number;
-    UINT8 data_offset; // 4 bits (lower 4) only
-    UINT8 reserved; // 6 lower bits. Must be 0
+  UINT16 source_port;
+  UINT16 dest_port;
+  UINT32 seq_number;
+  UINT32 ack_number;
 
-    /*
-     * Control Bits:  6 lower bits (from left to right):
-     *
-     *  - URG:  Urgent Pointer field significant
-     *  - ACK:  Acknowledgment field significant
-     *  - PSH:  Push Function
-     *  - RST:  Reset the connection
-     *  - SYN:  Synchronize sequence numbers
-     *  - FIN:  No more data from sender
-     */
-    UINT8 control_bits;
-    UINT16 window;
-    UINT16 checksum;
-    UINT16 urgent_pointer;
-    UINT8 options; // TODO. should be multiples of 8 ideally?
+  /*
+   * Control Bits:  6 lower bits (from left to right):
+   *
+   *  - URG:  Urgent Pointer field significant
+   *  - ACK:  Acknowledgment field significant
+   *  - PSH:  Push Function
+   *  - RST:  Reset the connection
+   *  - SYN:  Synchronize sequence numbers
+   *  - FIN:  No more data from sender
+   */
+  UINT16 data_offset_and_flags; // MSB 4 bits + 6 bits 0 + 6 bits of flag
 
-    TCPHeader()
-    {
-        source_port = 0;
-        dest_port = 0;
-        seq_number = 0;
-        ack_number = 0;
-        data_offset = 0;
-        reserved = 0;
-        control_bits = 0;
-        window = 0;
-        checksum = 0;
-        urgent_pointer = 0;
-        options = 0;
-    }
+  UINT16 window;
+  UINT16 checksum;
+  UINT16 urgent_pointer;
+  // UINT8 options; // TODO. should be multiples of 8 ideally?
+
+  TCPHeader() {
+    source_port = 0;
+    dest_port = 0;
+    seq_number = 0;
+    ack_number = 0;
+    data_offset_and_flags = 0;
+    window = 0;
+    checksum = 0;
+    urgent_pointer = 0;
+    // options = 0;
+  }
 };
 
 /*
  * Constructs a packet (payload + header)
  */
 class Packet {
-    public:
-        Packet(int sourcePort, int destPort);
-        ~Packet();
+public:
+  Packet(int sourcePort, int destPort);
+  ~Packet();
 
-        const char* makePacket();
-    private:
-        TCPHeader tcpHeader;
+  const char *makePacket();
+
+private:
+  TCPHeader tcpHeader;
 };
 
 #endif
