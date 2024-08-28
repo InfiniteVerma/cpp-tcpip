@@ -30,9 +30,10 @@ void client() {
         return;
     }
 
-    const char *message = "CLOSE";
-    socket.send(message, strlen(message), 0);
-    socket.close();
+    cout << "Connected!\n";
+    // const char *message = "CLOSE";
+    // socket.send(message, strlen(message), 0);
+    // socket.close();
 }
 
 int main() {

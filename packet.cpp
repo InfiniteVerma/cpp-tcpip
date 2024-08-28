@@ -47,7 +47,7 @@ int Packet::getSeq() { return tcpHeader.seq_number; }
 Packet Packet::getSYNPacket(PktData pktData) {
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
-    packet.setSequenceNumber(1);
+    packet.setSequenceNumber(pktData.seqNumber);
     packet.setTCPFlags((1 << 1));
 
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
@@ -64,7 +64,7 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     packet.setSequenceNumber(20);
 
     // set ack bit and pass seq number given by SYN in ack field
-    packet.setAckNumber(pktData.nextExpectedSeqNumber);
+    packet.setAckNumber(pktData.ackNumber);
 
     packet.setTCPFlags((1 << 1) | (1 << 4));  // set SYN and ACK
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
@@ -76,6 +76,29 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     return packet;
 }
 
-bool Packet::isSYNPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 1); }
+bool Packet::isSynPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 1); }
+
+bool Packet::isSynAckPacket(Packet packet) {
+    int flags = packet.tcpHeader.data_offset_and_flags;
+
+    return (flags > 1) & (flags > 4);
+}
+
+bool Packet::isAckPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 4); }
+
+Packet Packet::getAckPacket(PktData pktData) {
+    cout << __FUNCTION__ << " BEGIN\n";
+    Packet packet(pktData.localPortNum, pktData.remotePortNum);
+
+    packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
+    packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
+    cout << "Sending packet with source ip: " << pktData.sourceIp << "\n";
+    cout << "Sending packet with dest ip: " << pktData.destIp << "\n";
+
+    packet.setTCPFlags((1 << 4));  // ACK
+    packet.setAckNumber(pktData.ackNumber);
+
+    return packet;
+}
 
 Packet::~Packet() {}

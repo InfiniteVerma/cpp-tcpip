@@ -39,11 +39,17 @@ class TCB {
     UINT32 seg_up;
     UINT32 seg_prc;
 
+    ConnectionState getState();
+    void updateState(ConnectionState state);
+    ACTION updateState(char *buf, int size);
+
     /* my connection state */
-    TCBStateM myState;
 
     TCB();
     ~TCB();
+
+   private:
+    TCBStateM myState;
 };
 
 #endif

@@ -7,14 +7,16 @@
 struct PktData {
     int localPortNum;
     int remotePortNum;
-    int nextExpectedSeqNumber;  // 1 + seq get from older pkt
+    int ackNumber;  // 1 + seq get from older pkt
+    int seqNumber;
     const char *sourceIp;
     const char *destIp;
 
-    PktData(int localP, int remoteP, int ackNo, const char *sourceIp, const char *destIp) {
+    PktData(int localP, int remoteP, int ackNo, int seqNo, const char *sourceIp, const char *destIp) {
         localPortNum = localP;
         remotePortNum = remoteP;
-        nextExpectedSeqNumber = ackNo;
+        ackNumber = ackNo;
+        seqNumber = seqNo;
         this->sourceIp = sourceIp;
         this->destIp = destIp;
     }
@@ -39,11 +41,14 @@ class Packet {
     void setTCPFlags(int);
 
     // Checkers
-    static bool isSYNPacket(Packet);
+    static bool isSynPacket(Packet);
+    static bool isSynAckPacket(Packet);
+    static bool isAckPacket(Packet);
 
     // Actions
     static Packet getSYNPacket(PktData pktData);
     static Packet getSynAckPacket(PktData pktData);
+    static Packet getAckPacket(PktData pktData);
 
    private:
     IPHeader ipHeader;

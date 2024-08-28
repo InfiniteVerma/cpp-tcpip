@@ -28,16 +28,29 @@ struct StateMData {
     ACTION action;
     ConnectionState nextState;
 
-    StateMData(ConnectionState currS, CHECKER checker, ACTION action, ConnectionState nextS) {
-        currentState = currS;
+    StateMData(ConnectionState currentState, CHECKER checker, ACTION action, ConnectionState nextState) {
+        this->currentState = currentState;
         this->checker = checker;
-        nextState = nextS;
+        this->nextState = nextState;
         this->action = action;
     }
 };
 
-const vector<StateMData> FSM = {StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
-                                StateMData(LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket, SYN_RECEIVED)};
+// A connection progresses through a series of states during its
+//  lifetime.  The states are:  LISTEN, SYN-SENT, SYN-RECEIVED,
+//  ESTABLISHED, FIN-WAIT-1, FIN-WAIT-2, CLOSE-WAIT, CLOSING, LAST-ACK,
+//  TIME-WAIT, and the fictional state CLOSED.  CLOSED is fictional
+//  because it represents the state when there is no TCB, and therefore,
+//  no connection.  Briefly the meanings of the states are:
+
+// clang-format off
+const vector<StateMData> FSM = {
+    StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
+    StateMData(LISTEN, Packet::isSynPacket, Packet::getSynAckPacket, SYN_RECEIVED),
+    StateMData(SYN_SENT, Packet::isSynAckPacket, Packet::getAckPacket, ESTABLISHED),
+    StateMData(SYN_RECEIVED, Packet::isAckPacket, NULL, ESTABLISHED)
+};
+// clang-format on
 
 class TCBStateM {
    public:

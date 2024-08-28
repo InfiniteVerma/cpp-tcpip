@@ -141,11 +141,11 @@ int Socket::connect() {
 int Socket::threeWayHandshakeClient() {
     cout << __FUNCTION__ << " BEGIN\n";
 
-    tcb.myState.updateState(CLOSED);  // To update FSM
+    tcb.updateState(CLOSED);  // To update FSM
 
-    ACTION firstAction = tcb.myState.updateState(NULL, 0);
+    ACTION firstAction = tcb.updateState(NULL, 0);
 
-    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
+    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, 1, 0, sourceIp, destIp));
 
     cout << "Sending 1st SYN\n";
     sendPacket(pkt);
@@ -161,28 +161,28 @@ int Socket::threeWayHandshakeClient() {
         Utils::hexDump(buffer, size);
         cout << "After hex dump\n";
         cout << "Server sent a packet back!!!\n";
-        // char *msg = buffer + sizeof(IPHeader);
-        // cout << "Payload: " << msg << "\n";
-        // cout << "Parsing into packet type\n";
-        // Packet pkt = Packet(buffer, size);
         cout << "Sending to update state\n";
-        ACTION nextAction = tcb.myState.updateState(buffer, size);
+        ACTION nextAction = tcb.updateState(buffer, size);  // TODO
 
         cout << "Calling nextAction\n";
         if (!nextAction) {
             cout << "nextAction is NULL?";
             assert(0);
         }
-        Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
+
+        Packet pkt =
+            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, tcb.rcv_nxt, sourceIp, destIp));  // ACK packet
+
+        sendPacket(pkt);
 
         debugPrint();
+
     } else {
         cout << "No ACK received, stopping handshake!\n";
         return 1;
     }
 
     // delete payload; should be done when receving ACK!!
-
     // TODO start timer, retransmission queue
 
     return 0;
@@ -210,28 +210,47 @@ void Socket::sendPacket(Packet pkt) {
 void Socket::listen()  // TODO support backlog queue
 {
     cout << "Starting to listen for SYN pkts\n";
-    tcb.myState.updateState(LISTEN);
-    while (1)  // TODO should it be a while loop?
-    {
-        char *buffer = new char[65535];
-        int size = 0;
-        receivePacketNonBlocking(buffer, size);
-        Utils::hexDump(buffer, size);
+    tcb.updateState(LISTEN);
 
+    char *buffer = new char[65535];
+    int size = 0;
+    // Receive SYN
+    receivePacketNonBlocking(buffer, size);
+    Utils::hexDump(buffer, size);
+
+    cout << "After hex dump\n";
+    cout << "Sending to update state\n";
+    ACTION nextAction = tcb.updateState(buffer, size);
+
+    cout << "Calling nextAction\n";
+    Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 100, 0, sourceIp, destIp));
+
+    // Send SynAck
+    sendPacket(pkt);
+
+    debugPrint();
+
+    // Receive ACK
+    // now wait for 2 seconds for ACK message :)
+    memset(buffer, 0, sizeof(char) * 65535);
+    size = 0;
+    int ret = receivePacketBlocking(buffer, size, 2);
+    if (ret > 0) {
+        Utils::hexDump(buffer, size);
         cout << "After hex dump\n";
-        // char *msg = buffer + sizeof(IPHeader);
-        // cout << "Payload: " << msg << "\n";
-        // cout << "Parsing into packet type\n";
-        // Packet pkt = Packet(buffer, size);
-        cout << "Sending to update state\n";
-        ACTION nextAction = tcb.myState.updateState(buffer, size);
+
+        ACTION nextAction = tcb.updateState(buffer, size);
 
         cout << "Calling nextAction\n";
-        Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
-
-        sendPacket(pkt);
-
-        debugPrint();
+        if (!nextAction && tcb.getState() == ESTABLISHED) {
+            cout << "Established!";
+            return;
+        } else {
+            assert(0);
+        }
+    } else {
+        cout << "No ACK received, stopping handshake!\n";
+        assert(0);
     }
 }
 
@@ -423,7 +442,7 @@ void Socket::freeEphemeralPortNum(int portNum) {
 void Socket::debugPrint() {
     cout << "==============\nSocket debugPrint\n";
     cout << "Port: " << tcb.localPortNum << "\n";
-    cout << "TCB State: " << tcb.myState.getState() << "\n";
+    cout << "TCB State: " << tcb.getState() << "\n";
     cout << "Source IP: " << sourceIp << "\n";
     cout << "Dest IP: " << destIp << "\n";
 }
