@@ -12,6 +12,7 @@
 #include <ctime>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -130,7 +131,7 @@ int Socket::connect() {
 
     int ret = threeWayHandshakeClient();
 
-    if (ret)
+    if (!ret)
         cout << "Connected\n";
 
     return ret;
@@ -172,21 +173,10 @@ int Socket::threeWayHandshakeClient() {
     debugPrint();
     cout << "Starting timer\n";
 
-    time_t t = time(0);
-
-    while (
-        1) // block till say 1 second and if a packet doesn't arrive, stop FSM?
-    {
-        time_t curr = time(0);
-        if (difftime(curr, t) > 2) {
-            cout << "2 seconds elapsed, no packet received. Stopping "
-                    "handshake\n";
-            return 0;
-        }
-
-        char *buffer = new char[65535];
-        int size = 0;
-        receivePacketNonBlocking(buffer, size);
+    char *buffer = new char[65535];
+    size = 0;
+    int ret = receivePacketBlocking(buffer, size, 2);
+    if (ret > 0) {
         Utils::hexDump(buffer, size);
         cout << "After hex dump\n";
         cout << "Server sent a packet back!!!\n";
@@ -206,14 +196,16 @@ int Socket::threeWayHandshakeClient() {
             PktData(tcb.localPortNum, tcb.remotePortNum, 0, sourceIp, destIp));
 
         debugPrint();
-        break;
+    } else {
+        cout << "No ACK received, stopping handshake!\n";
+        return 1;
     }
 
     // delete payload; should be done when receving ACK!!
 
     // TODO start timer, retransmission queue
 
-    return 1;
+    return 0;
 }
 
 /*
@@ -245,6 +237,49 @@ void Socket::listen() // TODO support backlog queue
 
         debugPrint();
     }
+}
+
+int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
+    fd_set rfds;
+    struct timeval tv;
+
+    FD_ZERO(&rfds);
+    FD_SET(socketFd, &rfds);
+
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    int retval = select(socketFd, &rfds, NULL, NULL, &tv);
+
+    if (retval == -1)
+        perror("select()");
+    else if (retval) {
+        printf("Data is available now.\n");
+        /* FD_ISSET(0, &rfds) will be true. */
+        struct sockaddr saddr;
+        socklen_t socklen = sizeof(saddr);
+        size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
+                        &socklen); // TODO make it blocking?
+
+        cout << "recvfrom returned size: " << size << "\n";
+
+        if (size == 0) {
+            // peer has performed an orderly shutdown
+        } else if (size == -1) {
+            printf("Name: %s: Oh dear, something went wrong with recvfrom()! "
+                   "error: "
+                   "%d, %s\n",
+                   desc.c_str(), errno, strerror(errno));
+            assert(0);
+        } else {
+            cout << "Receive a packet of size: " << size << "\n";
+        }
+
+        return retval;
+    } else
+        printf("No data within 2 seconds.\n");
+
+    return retval;
 }
 
 void Socket::receivePacketNonBlocking(char *buffer, int &size) {

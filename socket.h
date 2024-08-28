@@ -37,6 +37,7 @@ class Socket {
     const char *destIp;
 
     void receivePacketNonBlocking(char *, int &);
+    int receivePacketBlocking(char *, int &, int seconds);
 
     static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
     static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
