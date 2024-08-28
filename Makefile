@@ -1,8 +1,8 @@
 CC = g++
-CFLAGS = -Wall -g -Werror
+CFLAGS = -Wall -g -Werror -I.
 
 # List of source files
-SRC = main.cpp socket.cpp tcb.cpp state_machine.cpp packet.cpp
+SRC = packet.cpp socket.cpp tcb.cpp state_machine.cpp
 
 #all: myserver myclient 
 # List of object files

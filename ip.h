@@ -1,4 +1,4 @@
-#ifndef __RFC792_IP__
+#ifndef __RFC793_IP__
 #define __RFC793_IP__
 
 #include "common.h"

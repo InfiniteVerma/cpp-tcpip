@@ -1,8 +1,8 @@
 #include "socket.h"
 #include "iostream"
 #include "ip.h"
-#include "packet.h"
 #include "state_machine.h"
+#include "tcp.h"
 #include <arpa/inet.h>
 #include <bitset>
 #include <cassert>
@@ -149,13 +149,16 @@ int Socket::threeWayHandshakeClient() {
     destAddress.sin_port = htons(0); // No port for raw sockets
     destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    Pkt pkt = getSYNPacket();
+    Packet pkt = getSYNPacket();
+
+    const char *payload = pkt.makePacket();
+    int size = pkt.getSize();
 
     cout << "Sending 1st SYN\n";
-    sendto(socketFd, pkt.payload, pkt.size, 0, (struct sockaddr *)&destAddress,
+    sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress,
            sizeof(destAddress));
 
-    delete pkt.payload;
+    delete payload;
 
     sleep(2);
     cout << "1st SYN sent\n";
@@ -165,28 +168,11 @@ int Socket::threeWayHandshakeClient() {
     return 1;
 }
 
-Pkt Socket::getSYNPacket() {
-    char *payload = new char[65535];
-
-    IPHeader ipheader;
-    ipheader.checksum = getChecksumVal(&ipheader);
-
-    memcpy(payload, &ipheader, sizeof(IPHeader));
-
-    TCPHeader tcpHeader(tcb.localPortNum, tcb.remotePortNum);
-    tcpHeader.seq_number = 111;
-    tcpHeader.data_offset_and_flags = (1 << 1); // setting SYN flag
-
-    char *ptr = payload + sizeof(IPHeader);
-    memcpy(ptr, &tcpHeader, sizeof(TCPHeader));
-
-    ptr += sizeof(TCPHeader);
-    strcpy(ptr, "Helloworld");
-
-    int size = sizeof(IPHeader) + sizeof(TCPHeader) + 10;
-    cout << "Sending packet of size: " << size << "\n";
-    Utils::hexDump(payload, size);
-    return Pkt(payload, size);
+Packet Socket::getSYNPacket() {
+    Packet packet(tcb.localPortNum, tcb.remotePortNum);
+    return packet;
+#if 0
+#endif
 }
 
 /*

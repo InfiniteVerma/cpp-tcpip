@@ -1,20 +1,12 @@
 #ifndef __RFC793_SOCKET__
 #define __RFC793_SOCKET__
 
+#include "packet.h"
 #include "tcb.h"
+#include "tcp.h"
 #include <bitset>
 
 #define EPHEMERAL_PORT_SIZE 5
-
-struct Pkt {
-    char *payload;
-    int size;
-
-    Pkt(char *p, int s) {
-        payload = p;
-        size = s;
-    }
-};
 
 class Socket {
   public:
@@ -35,7 +27,7 @@ class Socket {
 
   private:
     int threeWayHandshakeClient();
-    Pkt getSYNPacket();
+    Packet getSYNPacket();
 
     int socketFd;
     TCB tcb;
