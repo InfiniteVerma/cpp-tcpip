@@ -10,11 +10,14 @@
 class Packet {
   public:
     Packet(int sourcePort, int destPort);
-    Packet(char* rawPacket, int size);
+    Packet(char *rawPacket, int size);
     ~Packet();
 
     const char *makePacket();
     int getSize();
+
+    bool isSYN();
+    int getSeq();
 
   private:
     IPHeader ipHeader;

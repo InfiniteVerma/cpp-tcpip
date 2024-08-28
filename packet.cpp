@@ -4,8 +4,7 @@
 Packet::Packet(int sourcePort, int destPort)
     : tcpHeader(sourcePort, destPort), size(0) {}
 
-Packet::Packet(char* rawPacket, int size) : tcpHeader(0, 0)
-{
+Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
     cout << "Packet constructor, parsing the pkt\n";
     memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
     memcpy(&tcpHeader, rawPacket + sizeof(IPHeader), sizeof(TCPHeader));
@@ -36,10 +35,15 @@ const char *Packet::makePacket() {
     return payload;
 }
 
-int
-Packet::getSize()
-{
-    return size;
+int Packet::getSize() { return size; }
+
+bool Packet::isSYN() {
+    if (tcpHeader.data_offset_and_flags > 1)
+        return true;
+
+    return false;
 }
+
+int Packet::getSeq() { return tcpHeader.seq_number; }
 
 Packet::~Packet() {}

@@ -35,6 +35,8 @@ class Socket {
 
     static int ephemeralPorts[EPHEMERAL_PORT_SIZE]; // TODO 10?
     static std::bitset<EPHEMERAL_PORT_SIZE> ephemeralPortStatusSet;
+
+    queue<Packet> retransmissionQueue;
 };
 
 #endif

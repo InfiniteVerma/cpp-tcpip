@@ -1,6 +1,7 @@
 #include "socket.h"
 #include "iostream"
 #include "ip.h"
+#include "state_machine.h"
 #include "tcb.h"
 #include <arpa/inet.h>
 #include <bitset>
@@ -105,28 +106,12 @@ void Socket::bind(int p) {
  * 2. Perform the 3-way handshake
  */
 int Socket::connect(int serverPort) {
-    // Set up the server address structure
-    // sockaddr_in serverAddress;
-    // serverAddress.sin_family = AF_INET;
-    // serverAddress.sin_port = htons(serverPort);
-    // serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); // Replace with
-    // actual server IP
 
-    //// Allocate an ephemeral port number if needed (may not be necessary)
-    // tcb.localPortNum = Socket::allocateEphemeralPortNum();
-
-    //// Set up the socket for connection
-    // int ret = ::connect(socketFd, (struct sockaddr*)&serverAddress,
-    // sizeof(serverAddress)); if (ret != 0) {
-    //     printf("Name: %s: Oh dear, something went wrong with connect()!
-    //     error: %d, %s\n", desc.c_str(), errno, strerror(errno)); assert(0);
-    // }
-
-    // Perform the three-way handshake
     int ret = threeWayHandshakeClient();
 
     if (ret)
         cout << "Connected\n";
+
     return ret;
 }
 
@@ -157,6 +142,8 @@ int Socket::threeWayHandshakeClient() {
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress,
            sizeof(destAddress));
 
+    tcb.myState.updateState(SYN_SENT);
+
     delete payload;
 
     sleep(2);
@@ -181,8 +168,10 @@ Packet Socket::getSYNPacket() {
 void Socket::listen() // TODO support backlog queue
 {
     cout << "Starting to listen for SYN pkts\n";
+    tcb.myState.updateState(LISTEN);
     while (1) // TODO should it be a while loop?
     {
+
         struct sockaddr saddr;
         socklen_t socklen = sizeof(saddr);
         char *buffer = new char[65535];
@@ -206,14 +195,14 @@ void Socket::listen() // TODO support backlog queue
             Utils::hexDump(buffer, size);
 
             cout << "After hex dump\n";
-            char *msg = buffer + sizeof(IPHeader);
-            cout << "Payload: " << msg << "\n";
-            cout << "Parsing into packet type\n";
-            Packet pkt = Packet(buffer, size);
+            // char *msg = buffer + sizeof(IPHeader);
+            // cout << "Payload: " << msg << "\n";
+            // cout << "Parsing into packet type\n";
+            // Packet pkt = Packet(buffer, size);
+            cout << "Sending to update state\n";
+            tcb.myState.updateState(buffer, size);
         }
     }
-
-    tcb.myState.updateState(LISTEN);
 }
 
 void Socket::send(const char *message, size_t len, int flags) {
