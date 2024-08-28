@@ -2,6 +2,15 @@
 
 A tcp/ip stack in cpp, implementing RFC793.
 
+#### Steps
+
+Add the two ips in lo loopback interface
+
+```
+sudo ip addr add 192.168.1.1/24 dev lo
+sudo ip addr add 192.168.1.2/24 dev lo
+```
+
 #### Plan
 
 Continuously iterating on it since there's so much going on here :)
