@@ -37,13 +37,26 @@ const char *Packet::makePacket() {
 
 int Packet::getSize() { return size; }
 
-bool Packet::isSYN() {
-    if (tcpHeader.data_offset_and_flags > 1)
-        return true;
+int Packet::getSeq() { return tcpHeader.seq_number; }
 
-    return false;
+Packet Packet::getSYNPacket(int localPort, int remotePort) {
+    Packet packet(localPort, remotePort);
+
+    // TODO custome it for SYN
+    return packet;
 }
 
-int Packet::getSeq() { return tcpHeader.seq_number; }
+Packet Packet::getSynAckPacket(int localPort, int remotePort) {
+    cout << __FUNCTION__ << " BEGIN\n";
+    Packet packet(localPort, remotePort);
+
+    cout << "TODO!!\n\n";
+
+    return packet;
+}
+
+bool Packet::isSYNPacket(Packet packet) {
+    return (packet.tcpHeader.data_offset_and_flags > 1);
+}
 
 Packet::~Packet() {}

@@ -27,7 +27,7 @@ class Socket {
 
   private:
     int threeWayHandshakeClient();
-    Packet getSYNPacket();
+    // Packet getSYNPacket();
 
     int socketFd;
     TCB tcb;

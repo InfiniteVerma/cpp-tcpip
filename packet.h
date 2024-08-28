@@ -16,8 +16,15 @@ class Packet {
     const char *makePacket();
     int getSize();
 
-    bool isSYN();
     int getSeq();
+
+    static Packet getSYNPacket(int localPort, int removePort);
+
+    // Checkers
+    static bool isSYNPacket(Packet);
+
+    // Actions
+    static Packet getSynAckPacket(int localPort, int remotePort);
 
   private:
     IPHeader ipHeader;

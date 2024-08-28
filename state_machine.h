@@ -1,7 +1,9 @@
 #ifndef __RFC793_STATEMACHINE__
 #define __RFC793_STATEMACHINE__
 
+#include "packet.h"
 #include <ostream>
+#include <vector>
 enum ConnectionState {
     LISTEN = 0,
     SYN_SENT,
@@ -16,12 +18,33 @@ enum ConnectionState {
     CLOSED
 };
 
+typedef bool (*CHECKER)(Packet);
+typedef Packet (*ACTION)(int, int); // TODO?
+
+struct StateMData {
+    ConnectionState currentState;
+    CHECKER checker;
+    ACTION action;
+    ConnectionState nextState;
+
+    StateMData(ConnectionState currS, CHECKER checker, ACTION action,
+               ConnectionState nextS) {
+        currentState = currS;
+        this->checker = checker;
+        nextState = nextS;
+        this->action = action;
+    }
+};
+
+const vector<StateMData> FSM = {StateMData(
+    LISTEN, Packet::isSYNPacket, Packet::getSynAckPacket, SYN_RECEIVED)};
+
 class TCBStateM {
   public:
     TCBStateM();
 
     ConnectionState getState();
-    void updateState(char *pkt, int size);
+    ACTION updateState(char *pkt, int size);
     void updateState(ConnectionState);
 
   private:

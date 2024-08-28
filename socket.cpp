@@ -133,7 +133,7 @@ int Socket::threeWayHandshakeClient() {
     destAddress.sin_port = htons(0); // No port for raw sockets
     destAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    Packet pkt = getSYNPacket();
+    Packet pkt = Packet::getSYNPacket(tcb.localPortNum, tcb.remotePortNum);
 
     const char *payload = pkt.makePacket();
     int size = pkt.getSize();
@@ -152,13 +152,6 @@ int Socket::threeWayHandshakeClient() {
     // TODO start timer, retransmission queue
 
     return 1;
-}
-
-Packet Socket::getSYNPacket() {
-    Packet packet(tcb.localPortNum, tcb.remotePortNum);
-    return packet;
-#if 0
-#endif
 }
 
 /*
@@ -192,6 +185,7 @@ void Socket::listen() // TODO support backlog queue
         } else {
             cout << "Receive a packet of size: " << size << "\n";
 
+            // FUNC func = tcb.myState.updateState();
             Utils::hexDump(buffer, size);
 
             cout << "After hex dump\n";
@@ -200,7 +194,10 @@ void Socket::listen() // TODO support backlog queue
             // cout << "Parsing into packet type\n";
             // Packet pkt = Packet(buffer, size);
             cout << "Sending to update state\n";
-            tcb.myState.updateState(buffer, size);
+            ACTION nextAction = tcb.myState.updateState(buffer, size);
+
+            cout << "Calling nextAction\n";
+            nextAction(tcb.localPortNum, tcb.remotePortNum);
         }
     }
 }
