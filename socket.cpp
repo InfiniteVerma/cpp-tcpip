@@ -145,7 +145,9 @@ int Socket::threeWayHandshakeClient() {
 
     ACTION firstAction = tcb.updateState(NULL, 0);
 
-    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, 1, 0, sourceIp, destIp));
+    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
+
+    tcb.snd_nxt++;
 
     cout << "Sending 1st SYN\n";
     sendPacket(pkt);
@@ -169,6 +171,10 @@ int Socket::threeWayHandshakeClient() {
             cout << "nextAction is NULL?";
             assert(0);
         }
+
+        // update rcv seq number and send ACK
+        Packet tmpPkt = Packet(buffer, size);
+        tcb.rcv_nxt = tmpPkt.getSeq();
 
         Packet pkt =
             nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, tcb.rcv_nxt, sourceIp, destIp));  // ACK packet
@@ -223,7 +229,9 @@ void Socket::listen()  // TODO support backlog queue
     ACTION nextAction = tcb.updateState(buffer, size);
 
     cout << "Calling nextAction\n";
-    Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 100, 0, sourceIp, destIp));
+    Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
+
+    tcb.snd_nxt++;
 
     // Send SynAck
     sendPacket(pkt);
@@ -253,51 +261,6 @@ void Socket::listen()  // TODO support backlog queue
         assert(0);
     }
 }
-
-#if 0
-int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
-    fd_set rfds;
-    struct timeval tv;
-
-    FD_ZERO(&rfds);
-    FD_SET(socketFd, &rfds);
-
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
-
-    int retval = select(socketFd, &rfds, NULL, NULL, &tv);
-
-    if (retval == -1)
-        perror("select()");
-    else if (retval) {
-        printf("Data is available now.\n");
-        /* FD_ISSET(0, &rfds) will be true. */
-        struct sockaddr saddr;
-        socklen_t socklen = sizeof(saddr);
-        size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
-                        &socklen); // TODO make it blocking?
-
-        cout << "recvfrom returned size: " << size << "\n";
-
-        if (size == 0) {
-            // peer has performed an orderly shutdown
-        } else if (size == -1) {
-            printf("Name: %s: Oh dear, something went wrong with recvfrom()! "
-                   "error: "
-                   "%d, %s\n",
-                   desc.c_str(), errno, strerror(errno));
-            assert(0);
-        } else {
-            cout << "Receive a packet of size: " << size << "\n";
-        }
-
-        return retval;
-    } else
-        printf("No data within 2 seconds.\n");
-
-    return retval;
-}
-#endif
 
 int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
     fd_set rfds;
@@ -442,7 +405,7 @@ void Socket::freeEphemeralPortNum(int portNum) {
 void Socket::debugPrint() {
     cout << "==============\nSocket debugPrint\n";
     cout << "Port: " << tcb.localPortNum << "\n";
-    cout << "TCB State: " << tcb.getState() << "\n";
     cout << "Source IP: " << sourceIp << "\n";
     cout << "Dest IP: " << destIp << "\n";
+    tcb.debugPrint();
 }
