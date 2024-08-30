@@ -7,6 +7,8 @@
 
 #include "socket.h"
 
+#include "mytcp.h"
+
 #define PORT 9000
 
 /*
@@ -37,6 +39,7 @@ void client() {
 }
 
 int main() {
+    MyTcp::createMyTCP();
     client();
     return 0;
 }

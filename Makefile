@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -Wall -g -Werror -I.
 
 # List of source files
-SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp
+SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp mytcp.cpp
 
 #all: myserver myclient 
 # List of object files
@@ -23,11 +23,11 @@ $(EXEC): $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # for testing
-myserver: test_server.o socket.o state_machine.o tcb.o packet.o
-	$(CC) $(CFLAGS) -o myserver test_server.o socket.o state_machine.o tcb.o packet.o
+myserver: test_server.o socket.o state_machine.o tcb.o packet.o mytcp.o
+	$(CC) $(CFLAGS) -o myserver test_server.o socket.o state_machine.o tcb.o packet.o mytcp.o
 
-myclient: test_client.o socket.o state_machine.o tcb.o packet.o
-	$(CC) $(CFLAGS) -o myclient test_client.o socket.o state_machine.o tcb.o packet.o
+myclient: test_client.o socket.o state_machine.o tcb.o packet.o mytcp.o
+	$(CC) $(CFLAGS) -o myclient test_client.o socket.o state_machine.o tcb.o packet.o mytcp.o
 
 # Clean target to remove generated files
 clean:
