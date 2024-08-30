@@ -4,7 +4,6 @@ CFLAGS = -Wall -g -Werror -Iinclude/
 # List of source files
 SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp mytcp.cpp
 
-#all: myserver myclient 
 # List of object files
 OBJ = $(SRC:.cpp=.o)
 
@@ -31,4 +30,4 @@ myclient: test_client.o socket.o state_machine.o tcb.o packet.o mytcp.o
 
 # Clean target to remove generated files
 clean:
-	rm -f myserver myclient $(OBJ) $(EXEC) test_client.o test_server.o
+	rm -f myserver myclient $(OBJ) $(EXEC) test_client.o test_server.o tcp.o
