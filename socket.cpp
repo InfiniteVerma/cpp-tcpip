@@ -174,7 +174,7 @@ int Socket::threeWayHandshakeClient() {
 
         // update rcv seq number and send ACK
         Packet tmpPkt = Packet(buffer, size);
-        tcb.rcv_nxt = tmpPkt.getSeq(); // TODO decide on this?
+        tcb.rcv_nxt = tmpPkt.getSeq();  // TODO decide on this?
 
         Packet pkt =
             nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, tcb.rcv_nxt, sourceIp, destIp));  // ACK packet
@@ -275,7 +275,6 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
 
     // Use select to wait for data to be available
     int retval = select(socketFd + 1, &rfds, NULL, NULL, &tv);
-
 
     if (retval == -1) {
         perror("select()");

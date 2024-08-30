@@ -5,9 +5,8 @@
 #include <cstring>
 #include <iostream>
 
-#include "socket.h"
-
 #include "mytcp.h"
+#include "socket.h"
 
 #define PORT 9000
 

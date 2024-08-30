@@ -1,4 +1,5 @@
 #include "mytcp.h"
+
 #include <iostream>
 #include <thread>
 
@@ -7,36 +8,25 @@ using namespace std;
 MyTcp* MyTcp::myTCPInstance = nullptr;
 thread MyTcp::myThread;
 
-MyTcp::MyTcp()
-{
-    myThread = thread(startTCPThread);
-}
+MyTcp::MyTcp() { myThread = thread(startTCPThread); }
 
-MyTcp::~MyTcp()
-{
+MyTcp::~MyTcp() {
     cout << "Stopping myThread\n";
-    if(myThread.joinable())
-    {
-        myThread.join(); // TODO cleanup
-    }
-    else
-    {
+    if (myThread.joinable()) {
+        myThread.join();  // TODO cleanup
+    } else {
         cout << "ERROR, can't join!\n";
     }
 }
 
-void MyTcp::createMyTCP()
-{
-    if(!myTCPInstance)
-    {
+void MyTcp::createMyTCP() {
+    if (!myTCPInstance) {
         myTCPInstance = new MyTcp();
     }
 }
 
-void MyTcp::startTCPThread()
-{
-    while(1)
-    {
+void MyTcp::startTCPThread() {
+    while (1) {
         /* 1. react to calls from client */
         reactToUserCalls();
         /* 2. Process timeouts */
@@ -46,20 +36,17 @@ void MyTcp::startTCPThread()
     }
 }
 
-void MyTcp::reactToUserCalls()
-{
+void MyTcp::reactToUserCalls() {
     cout << __FUNCTION__ << " BEGIN (TODO)\n";
     std::this_thread::sleep_for(2000ms);
 }
 
-void MyTcp::processTimeouts()
-{
+void MyTcp::processTimeouts() {
     cout << __FUNCTION__ << " BEGIN (TODO)\n";
     std::this_thread::sleep_for(2000ms);
 }
 
-void MyTcp::recvPackets()
-{
+void MyTcp::recvPackets() {
     cout << __FUNCTION__ << " BEGIN (TODO)\n";
     std::this_thread::sleep_for(2000ms);
 }
