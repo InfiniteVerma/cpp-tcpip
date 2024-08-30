@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -g -Werror -I.
+CFLAGS = -Wall -g -Werror -Iinclude/
 
 # List of source files
 SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp mytcp.cpp
