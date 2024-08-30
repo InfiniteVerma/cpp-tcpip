@@ -1,17 +1,23 @@
+# Compiler
 CC = g++
-CFLAGS = -Wall -g -Werror -Iinclude/
+
+# Compiler flags
+CFLAGS = -Wall -g -Werror -Iinclude
 
 # List of source files
-SRC = main.cpp packet.cpp socket.cpp tcb.cpp state_machine.cpp mytcp.cpp
+SRC = src/main.cpp src/packet.cpp src/socket.cpp src/tcb.cpp src/state_machine.cpp src/mytcp.cpp
 
 # List of object files
 OBJ = $(SRC:.cpp=.o)
 
-# Executable name
+# Executable name for the main application
 EXEC = mytcp
 
+# Include the test Makefile
+include tests/Makefile
+
 # Default target
-all: $(EXEC) myserver myclient
+all: $(EXEC) $(SERVER_EXEC) $(CLIENT_EXEC)
 
 # Rule to link the object files into the final executable
 $(EXEC): $(OBJ)
@@ -21,13 +27,7 @@ $(EXEC): $(OBJ)
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# for testing
-myserver: test_server.o socket.o state_machine.o tcb.o packet.o mytcp.o
-	$(CC) $(CFLAGS) -o myserver test_server.o socket.o state_machine.o tcb.o packet.o mytcp.o
-
-myclient: test_client.o socket.o state_machine.o tcb.o packet.o mytcp.o
-	$(CC) $(CFLAGS) -o myclient test_client.o socket.o state_machine.o tcb.o packet.o mytcp.o
-
 # Clean target to remove generated files
 clean:
-	rm -f myserver myclient $(OBJ) $(EXEC) test_client.o test_server.o tcp.o
+	rm -f $(EXEC) $(OBJ) $(SERVER_EXEC) $(CLIENT_EXEC) tests/*.o
+
