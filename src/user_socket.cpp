@@ -20,6 +20,8 @@ int UserSocket::createSocket(std::string s, std::string srcIp, std::string destI
     int ret = msgsnd(msgQueueID, &msg, sizeof(msg), 0);
     assert("msgsnd failed" && ret != -1);
 
+    int fd = MyTcp::getFD();
+
     // Then wait for the DS to have an FD (key: PORT?)
-    return 1; // TODO
+    return fd; // TODO
 }

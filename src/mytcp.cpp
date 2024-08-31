@@ -2,7 +2,9 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+#include <condition_variable>
 #include <iostream>
+#include <mutex>
 #include <thread>
 #include "messages.h"
 
@@ -12,7 +14,12 @@ MyTcp* MyTcp::myTCPInstance = nullptr;
 thread MyTcp::myThread;
 int MyTcp::msgQueueID = -1;
 bool MyTcp::socketsAvailable = true;
-vector<Socket> MyTcp::mySockets;
+vector<pair<int, Socket>> MyTcp::mySockets;
+
+std::condition_variable MyTcp::myCV;
+std::mutex MyTcp::myMutex;
+
+bool MyTcp::isFDAvailable = false;
 
 MyTcp::MyTcp() { 
     // create the msgqueue
@@ -64,17 +71,32 @@ void MyTcp::reactToUserCalls() {
             cout << "Creating a new socket\n";
             if(socketsAvailable)
             {
+                std::lock_guard lk(myMutex);
+
                 Socket newSocket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
+                int newFD = getFreeFD();
+                isFDAvailable = true;
+
                 newSocket.setDestIp(myMsg.destIpAddr);
-                mySockets.push_back(newSocket);
-                cout << "Socket created and added to mySockets\n";
+                mySockets.push_back(make_pair(newFD, newSocket));
+
+                cout << "Socket created and added to mySockets, fd: " << newFD << "\n";
+                cout << "Notifying cv!\n";
+                myCV.notify_one();
             }
             else
             {
                 assert(0);
             }
             break;
+        case BIND_SOCKET:
+            cout << "BIND_SOCKET called TODO!\n";
+            break;
+        case LISTEN_SOCKET:
+            cout << "LISTEN_SOCKET called TODO!\n";
+            break;
         case CLOSE_SOCKET:
+            cout << "CLOSE_SOCKET called TODO!\n";
             break;
         default:
             assert(0);
@@ -94,4 +116,20 @@ void MyTcp::recvPackets() {
 const int MyTcp::getMsgQueueID()
 {
     return msgQueueID;
+}
+
+int MyTcp::getFreeFD()
+{
+    return 20;
+}
+
+int
+MyTcp::getFD()
+{
+    std::unique_lock lk(myMutex);
+    myCV.wait(lk, []{ return isFDAvailable; }); // wakes up if isFDAvailable is set
+    cout << "Conditional variable notified and isFDAvailable is set!\n";
+    int fd = mySockets.back().first;
+    myMutex.unlock();
+    return fd;
 }

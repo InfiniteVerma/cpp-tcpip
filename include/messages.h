@@ -7,6 +7,8 @@
 enum MessageTypes {
     CREATE_SOCKET = 0,
     CLOSE_SOCKET,
+    BIND_SOCKET,
+    LISTEN_SOCKET,
     ERROR,
 };
 

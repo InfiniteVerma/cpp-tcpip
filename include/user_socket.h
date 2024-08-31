@@ -10,6 +10,8 @@
 class UserSocket {
 public:
     static int createSocket(std::string s, std::string srcIp, std::string destIp, int port);
+
+    static int bindSocket(); 
 private:
     UserSocket();
     ~UserSocket();
