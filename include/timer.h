@@ -7,15 +7,18 @@
 
 using namespace std;
 
+typedef void (*FUNCTION)(void);
+
 class ScheduledTask {
    public:
     bool hasElapsed();
-    ScheduledTask(double delta);
+    ScheduledTask(double delta, FUNCTION func);
     void executeCallback();
 
    private:
     time_t last_checked_time;
     double delta;
+    FUNCTION callback;
 };
 
 class Timer {

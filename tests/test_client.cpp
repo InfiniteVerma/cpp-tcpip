@@ -42,8 +42,11 @@ void client() {
 
     cout << "fd: " << fd << "\n";
 
+    int ret = UserSocket::connect(fd);
+
+    cout << "connect ret: " << ret << "\n";
+
     cout << "Client TODO\n";
-    sleep(200);
 
     // const char *message = "CLOSE";
     // socket.send(message, strlen(message), 0);
@@ -53,5 +56,7 @@ void client() {
 int main() {
     MyTcp::createMyTCP();
     client();
+    cout << "Stopping the threads\n";
+    MyTcp::stopMyTCP();
     return 0;
 }

@@ -23,9 +23,12 @@ class Socket {
     void send(const char *message, size_t len, int flags);
     void close();
     int accept();
+    bool shouldListen();
 
     static int allocateEphemeralPortNum();
     static void freeEphemeralPortNum(int portNum);
+    void receivePacketNonBlocking(char *, int &);
+    int receivePacketBlocking(char *, int &, int seconds);
 
    private:
     int threeWayHandshakeClient();
@@ -37,8 +40,6 @@ class Socket {
     const char *sourceIp;
     const char *destIp;
 
-    void receivePacketNonBlocking(char *, int &);
-    int receivePacketBlocking(char *, int &, int seconds);
 
     void sendPacket(Packet pkt);
 

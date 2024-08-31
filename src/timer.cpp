@@ -11,9 +11,10 @@
 
 void printTime(std::time_t time) { std::cout << std::put_time(std::localtime(&time), "%F %T"); }
 
-ScheduledTask::ScheduledTask(double delta) {
+ScheduledTask::ScheduledTask(double delta, FUNCTION callback) {
     this->last_checked_time = time(nullptr);
     this->delta = delta;
+    this->callback = callback;
 }
 
 bool ScheduledTask::hasElapsed() {
@@ -39,7 +40,7 @@ bool ScheduledTask::hasElapsed() {
     return isElapsed;
 }
 
-void ScheduledTask::executeCallback() { std::cout << "ANANT Timer elapsed, executing callback!!\n\n"; }
+void ScheduledTask::executeCallback() { this->callback(); }
 
 Timer* Timer::myTimerInstance = nullptr;
 

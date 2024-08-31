@@ -3,6 +3,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+#include <chrono>
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
@@ -33,7 +34,7 @@ MyTcp::MyTcp() {
 
     // just for testing
     Timer* timerInstance = Timer::getInstance();
-    ScheduledTask* task = new ScheduledTask(10.0);
+    ScheduledTask* task = new ScheduledTask(2.0, [](){ cout << "Example timeout of 2 seconds, remove!\n"; });
     timerInstance->addTask(task);
 }
 
@@ -61,6 +62,23 @@ void MyTcp::startTCPThread() {
         /* 3. Recv pkt */
         recvPackets();
     }
+}
+
+void MyTcp::stopMyTCP()
+{
+    cout << "Stopping myThread\n";
+    /* destroy message queue */
+    if (msgctl(msgQueueID, IPC_RMID, NULL) == -1) {
+        cout << "Failed in deleting message queue!\n";
+    }
+    cout << "Deleted the msg queue!\n";
+    if (myThread.joinable()) {
+        myThread.join();  // TODO cleanup
+    } else {
+        cout << "ERROR, can't join!\n";
+    }
+
+    delete myTCPInstance;
 }
 
 void MyTcp::reactToUserCalls() {
@@ -132,21 +150,81 @@ void MyTcp::reactToUserCalls() {
         case CLOSE_SOCKET:
             cout << "CLOSE_SOCKET called TODO!\n";
             break;
+        case CONNECT_SOCKET:
+            {
+                cout << "CONNECT_SOCKET called ongoing!\n";
+                pair<UINT8, Socket> socketData = mySockets.back();
+                if (socketData.first != myMsg.fd) {
+                    cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
+                    retVal = 1;
+                } else {
+                    int retVal = socketData.second.connect();
+                    if(retVal!=0)
+                    {
+                        isRetValAvailable = true;
+                        myCV.notify_one();
+                    }
+                    else
+                    {
+                        // TODO add 5 seconds timer which if fails should return error code
+                        Timer* timerInstance = Timer::getInstance();
+                        ScheduledTask* task = new ScheduledTask(5.0, [](){ 
+                                cout << "TIMEOUT HIT for HANDSHAKE!!!!\n\n\n";
+
+                                MyTcp::setRetVal(1);
+                                });
+                        timerInstance->addTask(task);
+                        cout << __FUNCTION__ << " connect SYN call passed. Waiting for reply now!\n";
+                    }
+                }
+            }
+            break;
         default:
             assert(0);
     }
 }
 
+/*
+ * Assumes mutex is acquired. TODO update comment
+ */
+void MyTcp::setRetVal(int ret)
+{
+    retVal = 1;
+    isRetValAvailable = true;
+    myCV.notify_one();
+}
+
 void MyTcp::processTimeouts() {
-    // cout << __FUNCTION__ << " BEGIN (TODO)\n";
+    // cout << __FUNCTION__ << " BEGIN (TODO)\n";.
     // cout << __FUNCTION__ << " iterating through timer tasks and checking!\n";
 
     Timer* timerInstance = Timer::getInstance();
     timerInstance->runTimeouts();
+    this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void MyTcp::recvPackets() {
-    // cout << __FUNCTION__ << " BEGIN (TODO)\n";
+    //cout << __FUNCTION__ << " BEGIN (TODO)\n";
+    this_thread::sleep_for(std::chrono::seconds(1));
+
+    if(mySockets.empty()) return;
+
+    // iterate and check if they are in LISTEN mode?
+    pair<UINT8, Socket> mySocketData = mySockets.back();
+
+    Socket mySocket = mySocketData.second;
+
+   if(mySocket.shouldListen())
+   {
+       char *buffer = new char[65535];
+       int size = 0;
+       int ret = mySocket.receivePacketBlocking(buffer, size, 1);
+       if(ret > 0)
+       {
+           cout << __FUNCTION__ << " get a packet!\n";
+           Utils::hexDump(buffer, size);
+       }
+   }
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }

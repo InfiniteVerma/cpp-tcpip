@@ -58,5 +58,23 @@ int UserSocket::listen(UINT8 fd) {
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
-    return 0;
+    return ret;
+}
+
+/*
+ * Starts the 3-Way handshake by sending a SYN packet and starts a timer of 5 seconds. 
+ * If handshake doesn't complete by then, return an error.
+ */ 
+int UserSocket::connect(UINT8 fd)
+{
+    MyMsg msg(CONNECT_SOCKET, fd);
+    int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
+    
+    cout << ret << "\n";
+
+    if (ret != -1) {
+        ret = MyTcp::getRetval();
+    }
+    cout << "======\nANANT Get ret value from getRetval: " << ret << "\n";
+    return ret;
 }

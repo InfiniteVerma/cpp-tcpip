@@ -121,9 +121,8 @@ int Socket::connect() {
         return 1;
     }
 
-    int ret = threeWayHandshakeClient();
 
-    if (!ret) cout << "Connected\n";
+    int ret = threeWayHandshakeClient(); // TODO rename?
 
     return ret;
 }
@@ -156,6 +155,7 @@ int Socket::threeWayHandshakeClient() {
     debugPrint();
     cout << "Starting timer\n";
 
+#if 0
     char *buffer = new char[65535];
     int size = 0;
     int ret = receivePacketBlocking(buffer, size, 2);
@@ -190,6 +190,7 @@ int Socket::threeWayHandshakeClient() {
 
     // delete payload; should be done when receving ACK!!
     // TODO start timer, retransmission queue
+#endif
 
     return 0;
 }
@@ -218,6 +219,7 @@ void Socket::listen()  // TODO support backlog queue
     cout << "Starting to listen for SYN pkts\n";
     tcb.updateState(LISTEN);
 
+#if 0
     char *buffer = new char[65535];
     int size = 0;
     // Receive SYN
@@ -260,6 +262,7 @@ void Socket::listen()  // TODO support backlog queue
         cout << "No ACK received, stopping handshake!\n";
         assert(0);
     }
+#endif
 }
 
 int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
@@ -408,4 +411,10 @@ void Socket::debugPrint() {
     cout << "Source IP: " << sourceIp << "\n";
     cout << "Dest IP: " << destIp << "\n";
     tcb.debugPrint();
+}
+
+bool Socket::shouldListen()
+{
+    //cout << __FUNCTION__ << " TODO fix this properly\n";
+    return (tcb.getState() != CLOSED);
 }

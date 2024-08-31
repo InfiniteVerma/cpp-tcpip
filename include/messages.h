@@ -10,6 +10,7 @@ enum MessageTypes {
     CLOSE_SOCKET,
     BIND_SOCKET,
     LISTEN_SOCKET,
+    CONNECT_SOCKET,
     ERROR,
 };
 

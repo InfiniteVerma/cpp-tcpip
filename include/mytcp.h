@@ -9,10 +9,12 @@
 class MyTcp {
    public:
     static void createMyTCP();
+    static void stopMyTCP();
 
     const static int getMsgQueueID();
     static UINT8 getFD();
     static int getRetval();
+    static void setRetVal(int);
 
    private:
     MyTcp();
