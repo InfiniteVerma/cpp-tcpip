@@ -19,7 +19,7 @@ using namespace std;
  */
 
 void server() {
-    std::cout << "Hello from server thread\n";
+    LOG("Hello from server thread\n");
 #if 0
     Socket socket("Server", "192.168.1.1", PORT);
 
@@ -36,21 +36,21 @@ void server() {
 
     UINT8 fd = UserSocket::create(name, srcIp, destIp, PORT);
 
-    cout << "Got fd: " << fd << "\n";
+    LOG("Got fd: ", fd, "\n");
 
     int ret = UserSocket::bind(fd);
 
-    cout << "bind ret: " << ret << "\n";
+    LOG("bind ret: ", ret, "\n");
 
     assert("ret val is not 0" && ret == 0);
 
     // ret = UserSocket::listen(fd);
 
-    cout << "TODO listen handshake done!\n";
+    LOG("TODO listen handshake done!\n");
     sleep(200);
     // while (1) {
     //     int clientSocket = socket.accept();
-    //     std::cout << "SERVER: clientSocket: " << clientSocket << "\n";
+    //     gLOG("SERVER: clientSocket: " , clientSocket , "\n");
 
     //    if (clientSocket == -1) {
     //        printf("Oh dear, something went wrong with accept()! %s\n", strerror(errno));
@@ -59,20 +59,21 @@ void server() {
 
     //    char buffer[1024] = {0};
     //    ::recv(clientSocket, buffer, sizeof(buffer), 0);
-    //    std::cout << "SERVER: Message from client: <" << buffer << ">" << std::endl;
+    //    gLOG("SERVER: Message from client: <" , buffer , ">" , std::endl);
 
     //    if (strcmp(buffer, "CLOSE") == 0) {
-    //        std::cout << "Closing server\n";
+    //        gLOG("Closing server\n");
     //        break;
     //    } else {
-    //        std::cout << "SERVER: buffer doesn't match close: " << buffer << "\n";
+    //        gLOG("SERVER: buffer doesn't match close: " , buffer , "\n");
     //    }
     //}
     // socket.close();
 }
 
 int main() {
-    MyTcp::createMyTCP();
+    MyTcp::createMyTCP("Server");
     server();
+    MyTcp::stopMyTCP();
     return 0;
 }

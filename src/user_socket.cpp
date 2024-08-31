@@ -16,7 +16,7 @@
 UINT8 UserSocket::create(std::string s, std::string srcIp, std::string destIp, int port) {
     int msgQueueID = MyTcp::getMsgQueueID();
 
-    cout << "MsgQueueID: " << msgQueueID << "\n";
+    LOG("MsgQueueID: ", msgQueueID);
 
     MyMsg msg(CREATE_SOCKET, s.c_str(), s.length(), srcIp.c_str(), srcIp.length(), destIp.c_str(), destIp.length(),
               port);
@@ -36,7 +36,7 @@ UINT8 UserSocket::create(std::string s, std::string srcIp, std::string destIp, i
 }
 
 int UserSocket::bind(UINT8 fd) {
-    cout << __FUNCTION__ << " BEGIN: <" << static_cast<int>(fd) << ">\n";
+    LOG(__FUNCTION__, " BEGIN: <", static_cast<int>(fd), ">\n");
 
     MyMsg msg(BIND_SOCKET, fd);
     msg.fd = static_cast<UINT8>(fd);
@@ -53,7 +53,7 @@ int UserSocket::listen(UINT8 fd) {
     MyMsg msg(LISTEN_SOCKET, fd);
 
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
-    cout << ret << "\n";
+    LOG(ret);
 
     if (ret != -1) {
         ret = MyTcp::getRetval();
@@ -62,19 +62,18 @@ int UserSocket::listen(UINT8 fd) {
 }
 
 /*
- * Starts the 3-Way handshake by sending a SYN packet and starts a timer of 5 seconds. 
+ * Starts the 3-Way handshake by sending a SYN packet and starts a timer of 5 seconds.
  * If handshake doesn't complete by then, return an error.
- */ 
-int UserSocket::connect(UINT8 fd)
-{
+ */
+int UserSocket::connect(UINT8 fd) {
     MyMsg msg(CONNECT_SOCKET, fd);
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
-    
-    cout << ret << "\n";
+
+    LOG(ret);
 
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
-    cout << "======\nANANT Get ret value from getRetval: " << ret << "\n";
+    LOG("======\nANANT Get ret value from getRetval: ", ret);
     return ret;
 }

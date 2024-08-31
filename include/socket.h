@@ -40,7 +40,6 @@ class Socket {
     const char *sourceIp;
     const char *destIp;
 
-
     void sendPacket(Packet pkt);
 
     static int ephemeralPorts[EPHEMERAL_PORT_SIZE];  // TODO 10?

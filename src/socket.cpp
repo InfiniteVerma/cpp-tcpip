@@ -97,7 +97,7 @@ void Socket::bind() {
     // int flag = 1;
     // int result = setsockopt(socketFd, IPPROTO_TCP, TCP_NODELAY, (char
     // *)&flag, sizeof(int)); if (result < 0) {
-    //     std::cerr << "Error disabling Nagle's algorithm\n";
+    //     std::cerr , "Error disabling Nagle's algorithm\n";
     // }
 }
 
@@ -121,8 +121,7 @@ int Socket::connect() {
         return 1;
     }
 
-
-    int ret = threeWayHandshakeClient(); // TODO rename?
+    int ret = threeWayHandshakeClient();  // TODO rename?
 
     return ret;
 }
@@ -138,7 +137,7 @@ int Socket::connect() {
  *    - starts timer, adds pkt to transmission queue
  */
 int Socket::threeWayHandshakeClient() {
-    cout << __FUNCTION__ << " BEGIN\n";
+    LOG(__FUNCTION__, " BEGIN\n");
 
     tcb.updateState(CLOSED);  // To update FSM
 
@@ -148,12 +147,12 @@ int Socket::threeWayHandshakeClient() {
 
     tcb.snd_nxt++;
 
-    cout << "Sending 1st SYN\n";
+    LOG("Sending 1st SYN\n");
     sendPacket(pkt);
-    cout << "1st SYN sent\n";
+    LOG("1st SYN sent\n");
 
     debugPrint();
-    cout << "Starting timer\n";
+    LOG("Starting timer\n");
 
 #if 0
     char *buffer = new char[65535];
@@ -161,14 +160,14 @@ int Socket::threeWayHandshakeClient() {
     int ret = receivePacketBlocking(buffer, size, 2);
     if (ret > 0) {
         Utils::hexDump(buffer, size);
-        cout << "After hex dump\n";
-        cout << "Server sent a packet back!!!\n";
-        cout << "Sending to update state\n";
+        LOG("After hex dump\n");
+        LOG("Server sent a packet back!!!\n");
+        LOG("Sending to update state\n");
         ACTION nextAction = tcb.updateState(buffer, size);  // TODO
 
-        cout << "Calling nextAction\n";
+        LOG("Calling nextAction\n");
         if (!nextAction) {
-            cout << "nextAction is NULL?";
+            LOG("nextAction is NULL?");
             assert(0);
         }
 
@@ -184,7 +183,7 @@ int Socket::threeWayHandshakeClient() {
         debugPrint();
 
     } else {
-        cout << "No ACK received, stopping handshake!\n";
+        LOG("No ACK received, stopping handshake!\n");
         return 1;
     }
 
@@ -216,7 +215,7 @@ void Socket::sendPacket(Packet pkt) {
  */
 void Socket::listen()  // TODO support backlog queue
 {
-    cout << "Starting to listen for SYN pkts\n";
+    LOG("Starting to listen for SYN pkts\n");
     tcb.updateState(LISTEN);
 
 #if 0
@@ -226,11 +225,11 @@ void Socket::listen()  // TODO support backlog queue
     receivePacketNonBlocking(buffer, size);
     Utils::hexDump(buffer, size);
 
-    cout << "After hex dump\n";
-    cout << "Sending to update state\n";
+    LOG("After hex dump\n");
+    LOG("Sending to update state\n");
     ACTION nextAction = tcb.updateState(buffer, size);
 
-    cout << "Calling nextAction\n";
+    LOG("Calling nextAction\n");
     Packet pkt = nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
 
     tcb.snd_nxt++;
@@ -247,19 +246,19 @@ void Socket::listen()  // TODO support backlog queue
     int ret = receivePacketBlocking(buffer, size, 2);
     if (ret > 0) {
         Utils::hexDump(buffer, size);
-        cout << "After hex dump\n";
+        LOG("After hex dump\n");
 
         ACTION nextAction = tcb.updateState(buffer, size);
 
-        cout << "Calling nextAction\n";
+        LOG("Calling nextAction\n");
         if (!nextAction && tcb.getState() == ESTABLISHED) {
-            cout << "Established!";
+            LOG("Established!");
             return;
         } else {
             assert(0);
         }
     } else {
-        cout << "No ACK received, stopping handshake!\n";
+        LOG("No ACK received, stopping handshake!\n");
         assert(0);
     }
 #endif
@@ -300,7 +299,7 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
             printf("Peer has performed an orderly shutdown\n");
         } else {
             // Successfully received data
-            cout << "Received a packet of size: " << size << "\n";
+            LOG("Received a packet of size: ", size, "\n");
         }
 
         return retval;
@@ -317,7 +316,7 @@ void Socket::receivePacketNonBlocking(char *buffer, int &size) {
     size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
                     &socklen);  // TODO make it blocking?
 
-    cout << "recvfrom returned size: " << size << "\n";
+    LOG("recvfrom returned size: ", size, "\n");
 
     if (size == 0) {
         // peer has performed an orderly shutdown
@@ -329,13 +328,13 @@ void Socket::receivePacketNonBlocking(char *buffer, int &size) {
             desc.c_str(), errno, strerror(errno));
         assert(0);
     } else {
-        cout << "Receive a packet of size: " << size << "\n";
+        LOG("Receive a packet of size: ", size, "\n");
     }
 }
 
 // TODO to be used after handshake completes
 void Socket::send(const char *message, size_t len, int flags) {
-    cout << "Client: sending: " << message << " - len: " << len << "\n";
+    LOG("Client: sending: ", message, " - len: ", len, "\n");
 
     sockaddr_in saddr = {};
     // saddr.sin_family = AF_INET;
@@ -344,7 +343,7 @@ void Socket::send(const char *message, size_t len, int flags) {
 
     //// Check for invalid IP address
     // if (saddr.sin_addr.s_addr == INADDR_NONE) {
-    //     cout << "Invalid IP address\n";
+    //     LOG("Invalid IP address\n");
     //     return;
     // }
 
@@ -406,15 +405,14 @@ void Socket::freeEphemeralPortNum(int portNum) {
 }
 
 void Socket::debugPrint() {
-    cout << "==============\nSocket debugPrint\n";
-    cout << "Port: " << tcb.localPortNum << "\n";
-    cout << "Source IP: " << sourceIp << "\n";
-    cout << "Dest IP: " << destIp << "\n";
+    LOG("==============\nSocket debugPrint\n");
+    LOG("Port: ", tcb.localPortNum, "\n");
+    LOG("Source IP: ", sourceIp, "\n");
+    LOG("Dest IP: ", destIp, "\n");
     tcb.debugPrint();
 }
 
-bool Socket::shouldListen()
-{
-    //cout << __FUNCTION__ << " TODO fix this properly\n";
+bool Socket::shouldListen() {
+    // LOG(__FUNCTION__ , " TODO fix this properly\n");
     return (tcb.getState() != CLOSED);
 }

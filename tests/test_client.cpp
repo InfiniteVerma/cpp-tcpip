@@ -17,7 +17,7 @@
  */
 
 void client() {
-    std::cout << "Hello from client thread\n";
+    LOG("Hello from client thread");
 #if 0
     Socket socket("Client", "192.168.1.2", PORT);
     socket.setDestIp("192.168.1.1");
@@ -28,7 +28,7 @@ void client() {
 
     if (ret != 0) {
         // TODO formalize error coding
-        std::cout << "3 way handshake failed\n";
+        LOG("3 way handshake failed");
         socket.close();
         return;
     }
@@ -40,13 +40,13 @@ void client() {
 
     int fd = UserSocket::create(name, srcIp, destIp, PORT);
 
-    cout << "fd: " << fd << "\n";
+    LOG("fd: ", fd);
 
     int ret = UserSocket::connect(fd);
 
-    cout << "connect ret: " << ret << "\n";
+    LOG("connect ret: ", ret);
 
-    cout << "Client TODO\n";
+    LOG("Client TODO");
 
     // const char *message = "CLOSE";
     // socket.send(message, strlen(message), 0);
@@ -54,9 +54,9 @@ void client() {
 }
 
 int main() {
-    MyTcp::createMyTCP();
+    MyTcp::createMyTCP("Client");
     client();
-    cout << "Stopping the threads\n";
+    LOG("Stopping the threads");
     MyTcp::stopMyTCP();
     return 0;
 }

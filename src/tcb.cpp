@@ -51,29 +51,29 @@ void TCB::generateISN() {
 
     snd_nxt = millis % (1 << 31);
 
-    cout << "Generated ISN: " << snd_nxt << "\n";
+    LOG("Generated ISN: ", snd_nxt);
 }
 
 ConnectionState TCB::getState() { return myState.getState(); }
 
 void TCB::debugPrint() {
-    cout << "=========\nTCB Data\n";
-    cout << "snd_una: " << snd_una << "\n";
-    cout << "snd_nxt: " << snd_nxt << "\n";
-    cout << "snd_wnd: " << snd_wnd << "\n";
-    cout << "snd_up: " << snd_up << "\n";
-    cout << "snd_wl1: " << snd_wl1 << "\n";
-    cout << "snd_wl2: " << snd_wl2 << "\n";
-    cout << "iss: " << iss << "\n";
-    cout << "rcv_nxt: " << rcv_nxt << "\n";
-    cout << "rcv_wnd: " << rcv_wnd << "\n";
-    cout << "rcv_up: " << rcv_up << "\n";
-    cout << "irs: " << irs << "\n";
-    cout << "seg_seq: " << seg_seq << "\n";
-    cout << "seq_ack: " << seq_ack << "\n";
-    cout << "seg_len: " << seg_len << "\n";
-    cout << "seg_wnd: " << seg_wnd << "\n";
-    cout << "seg_up: " << seg_up << "\n";
-    cout << "seg_prc: " << seg_prc << "\n";
-    cout << "My State: " << myState.getState() << "\n";
+    LOG("=========\nTCB Data");
+    LOG("snd_una: ", snd_una);
+    LOG("snd_nxt: ", snd_nxt);
+    LOG("snd_wnd: ", snd_wnd);
+    LOG("snd_up: ", snd_up);
+    LOG("snd_wl1: ", snd_wl1);
+    LOG("snd_wl2: ", snd_wl2);
+    LOG("iss: ", iss);
+    LOG("rcv_nxt: ", rcv_nxt);
+    LOG("rcv_wnd: ", rcv_wnd);
+    LOG("rcv_up: ", rcv_up);
+    LOG("irs: ", irs);
+    LOG("seg_seq: ", seg_seq);
+    LOG("seq_ack: ", seq_ack);
+    LOG("seg_len: ", seg_len);
+    LOG("seg_wnd: ", seg_wnd);
+    LOG("seg_up: ", seg_up);
+    LOG("seg_prc: ", seg_prc);
+    LOG("My State: ", myState.getState());
 }

@@ -53,13 +53,13 @@ struct MyMsg {
     MyMsg() {}
 
     void print() {
-        cout << "======MyMsg========\n";
-        cout << "mtype: " << (MessageTypes)mtype << "\n"
-             << "socketName: " << socketName << "\n"
-             << "sourceIpAddr: " << sourceIpAddr << "\n"
-             << "destIpAddr: " << destIpAddr << "\n"
-             << "port: " << port << "\n"
-             << "fd: " << static_cast<int>(fd) << "\n";
+        LOG("======MyMsg========");
+        LOG("mtype: ", (MessageTypes)mtype);
+        LOG("socketName: ", socketName);
+        LOG("sourceIpAddr: ", sourceIpAddr);
+        LOG("destIpAddr: ", destIpAddr);
+        LOG("port: ", port);
+        LOG("fd: ", static_cast<int>(fd));
     }
 };
 

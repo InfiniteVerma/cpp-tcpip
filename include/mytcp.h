@@ -8,7 +8,7 @@
 
 class MyTcp {
    public:
-    static void createMyTCP();
+    static void createMyTCP(string threadName);
     static void stopMyTCP();
 
     const static int getMsgQueueID();
@@ -31,6 +31,7 @@ class MyTcp {
     static int getFreeFD();
 
     static int msgQueueID;
+    static bool isStopped;
 
     // Socket mySocket; // TODO scale this
     static vector<pair<UINT8, Socket>> mySockets;

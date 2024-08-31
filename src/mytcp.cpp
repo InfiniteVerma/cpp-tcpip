@@ -5,10 +5,10 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <iostream>
 #include <mutex>
 #include <thread>
 
+#include "common.h"
 #include "messages.h"
 #include "timer.h"
 
@@ -25,6 +25,7 @@ std::mutex MyTcp::myMutex;
 
 bool MyTcp::isFDAvailable = false;
 bool MyTcp::isRetValAvailable = false;
+bool MyTcp::isStopped = false;
 int MyTcp::retVal = 0;
 
 MyTcp::MyTcp() {
@@ -34,27 +35,29 @@ MyTcp::MyTcp() {
 
     // just for testing
     Timer* timerInstance = Timer::getInstance();
-    ScheduledTask* task = new ScheduledTask(2.0, [](){ cout << "Example timeout of 2 seconds, remove!\n"; });
+    ScheduledTask* task = new ScheduledTask(2.0, []() { LOG("Example timeout of 2 seconds, remove!"); });
     timerInstance->addTask(task);
 }
 
 MyTcp::~MyTcp() {
-    cout << "Stopping myThread\n";
+    LOG("Stopping myThread");
     if (myThread.joinable()) {
         myThread.join();  // TODO cleanup
     } else {
-        cout << "ERROR, can't join!\n";
+        LOG("ERROR, can't join!");
     }
 }
 
-void MyTcp::createMyTCP() {
+void MyTcp::createMyTCP(string mainThreadName) {
+    Utils::addThreadInfo(mainThreadName);
     if (!myTCPInstance) {
         myTCPInstance = new MyTcp();
     }
 }
 
 void MyTcp::startTCPThread() {
-    while (1) {
+    Utils::addThreadInfo("Kernel");
+    while (!isStopped) {
         /* 1. react to calls from client */
         reactToUserCalls();
         /* 2. Process timeouts */
@@ -64,25 +67,25 @@ void MyTcp::startTCPThread() {
     }
 }
 
-void MyTcp::stopMyTCP()
-{
-    cout << "Stopping myThread\n";
+void MyTcp::stopMyTCP() {
+    LOG("Stopping myThread");
+    isStopped = true;
     /* destroy message queue */
     if (msgctl(msgQueueID, IPC_RMID, NULL) == -1) {
-        cout << "Failed in deleting message queue!\n";
+        LOG("Failed in deleting message queue!");
     }
-    cout << "Deleted the msg queue!\n";
+    LOG("Deleted the msg queue!");
     if (myThread.joinable()) {
         myThread.join();  // TODO cleanup
     } else {
-        cout << "ERROR, can't join!\n";
+        LOG("ERROR, can't join!");
     }
 
     delete myTCPInstance;
 }
 
 void MyTcp::reactToUserCalls() {
-    // cout << __FUNCTION__ << " BEGIN (ONGOING)\n";
+    // LOG(__FUNCTION__ << " BEGIN (ONGOING)");
 
     MyMsg myMsg;
 
@@ -90,14 +93,14 @@ void MyTcp::reactToUserCalls() {
 
     if (ret == -1) return;
 
-    cout << "MyTcp got a message!\n";
+    LOG("MyTcp got a message!");
     myMsg.print();
 
     switch (myMsg.mtype) {
         case CREATE_SOCKET:
             if (socketsAvailable) {
                 std::lock_guard lk(myMutex);
-                cout << "Creating a new socket\n";
+                LOG("Creating a new socket");
 
                 Socket newSocket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
                 int newFD = getFreeFD();
@@ -106,8 +109,8 @@ void MyTcp::reactToUserCalls() {
                 newSocket.setDestIp(myMsg.destIpAddr);
                 mySockets.push_back(make_pair(newFD, newSocket));
 
-                cout << "Socket created and added to mySockets, fd: " << newFD << "\n";
-                cout << "Notifying cv!\n";
+                LOG("Socket created and added to mySockets, fd: ", newFD, "");
+                LOG("Notifying cv!");
                 myCV.notify_one();
             } else {
                 assert(0);
@@ -117,14 +120,14 @@ void MyTcp::reactToUserCalls() {
             std::lock_guard lk(myMutex);
             pair<int, Socket> socketData = mySockets.back();
             if (socketData.first != myMsg.fd) {
-                cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
+                LOG("Invalid fd passed: <", myMsg.fd, ">");
                 retVal = 1;
             } else {
                 socketData.second.bind();
                 retVal = 0;
             }
             isRetValAvailable = true;
-            cout << "BIND_SOCKET called done!\n";
+            LOG("BIND_SOCKET called done!");
             myCV.notify_one();
         } break;
         case LISTEN_SOCKET: {
@@ -133,52 +136,47 @@ void MyTcp::reactToUserCalls() {
              */
             std::lock_guard lk(myMutex);
             pair<UINT8, Socket> socketData = mySockets.back();
-            cout << "Listening socket with fd: <" << myMsg.fd << ">\n";
-            cout << "Stored fd: " << socketData.first << "\n";
+            LOG("Listening socket with fd: <", myMsg.fd, ">");
+            LOG("Stored fd: ", socketData.first, "");
             if (socketData.first != myMsg.fd) {
-                cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
+                LOG("Invalid fd passed: <", myMsg.fd, ">");
                 retVal = 1;
             } else {
                 socketData.second.listen();
                 // retVal = 0;
             }
             // isRetValAvailable = true;
-            cout << "LISTEN_SOCKET called !, not notifying conditional variable. Will wait till handshake completes or "
-                    "a timeout?\n";
+            LOG("LISTEN_SOCKET called !, not notifying conditional variable. Will wait till handshake completes or a "
+                "timeout?");
             // myCV.notify_one();
         } break;
         case CLOSE_SOCKET:
-            cout << "CLOSE_SOCKET called TODO!\n";
+            LOG("CLOSE_SOCKET called TODO!");
             break;
-        case CONNECT_SOCKET:
-            {
-                cout << "CONNECT_SOCKET called ongoing!\n";
-                pair<UINT8, Socket> socketData = mySockets.back();
-                if (socketData.first != myMsg.fd) {
-                    cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
-                    retVal = 1;
+        case CONNECT_SOCKET: {
+            LOG("CONNECT_SOCKET called ongoing!");
+            pair<UINT8, Socket> socketData = mySockets.back();
+            if (socketData.first != myMsg.fd) {
+                LOG("Invalid fd passed: <", myMsg.fd, ">");
+                retVal = 1;
+            } else {
+                int retVal = socketData.second.connect();
+                if (retVal != 0) {
+                    isRetValAvailable = true;
+                    myCV.notify_one();
                 } else {
-                    int retVal = socketData.second.connect();
-                    if(retVal!=0)
-                    {
-                        isRetValAvailable = true;
-                        myCV.notify_one();
-                    }
-                    else
-                    {
-                        // TODO add 5 seconds timer which if fails should return error code
-                        Timer* timerInstance = Timer::getInstance();
-                        ScheduledTask* task = new ScheduledTask(5.0, [](){ 
-                                cout << "TIMEOUT HIT for HANDSHAKE!!!!\n\n\n";
+                    // TODO add 5 seconds timer which if fails should return error code
+                    Timer* timerInstance = Timer::getInstance();
+                    ScheduledTask* task = new ScheduledTask(5.0, []() {
+                        LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
-                                MyTcp::setRetVal(1);
-                                });
-                        timerInstance->addTask(task);
-                        cout << __FUNCTION__ << " connect SYN call passed. Waiting for reply now!\n";
-                    }
+                        MyTcp::setRetVal(1);
+                    });
+                    timerInstance->addTask(task);
+                    LOG(__FUNCTION__, " connect SYN call passed. Waiting for reply now!");
                 }
             }
-            break;
+        } break;
         default:
             assert(0);
     }
@@ -187,16 +185,15 @@ void MyTcp::reactToUserCalls() {
 /*
  * Assumes mutex is acquired. TODO update comment
  */
-void MyTcp::setRetVal(int ret)
-{
+void MyTcp::setRetVal(int ret) {
     retVal = 1;
     isRetValAvailable = true;
     myCV.notify_one();
 }
 
 void MyTcp::processTimeouts() {
-    // cout << __FUNCTION__ << " BEGIN (TODO)\n";.
-    // cout << __FUNCTION__ << " iterating through timer tasks and checking!\n";
+    // LOG(__FUNCTION__ << " BEGIN (TODO)";.
+    // LOG(__FUNCTION__ << " iterating through timer tasks and checking!");
 
     Timer* timerInstance = Timer::getInstance();
     timerInstance->runTimeouts();
@@ -204,27 +201,25 @@ void MyTcp::processTimeouts() {
 }
 
 void MyTcp::recvPackets() {
-    //cout << __FUNCTION__ << " BEGIN (TODO)\n";
+    // LOG(__FUNCTION__ << " BEGIN (TODO)");
     this_thread::sleep_for(std::chrono::seconds(1));
 
-    if(mySockets.empty()) return;
+    if (mySockets.empty()) return;
 
     // iterate and check if they are in LISTEN mode?
     pair<UINT8, Socket> mySocketData = mySockets.back();
 
     Socket mySocket = mySocketData.second;
 
-   if(mySocket.shouldListen())
-   {
-       char *buffer = new char[65535];
-       int size = 0;
-       int ret = mySocket.receivePacketBlocking(buffer, size, 1);
-       if(ret > 0)
-       {
-           cout << __FUNCTION__ << " get a packet!\n";
-           Utils::hexDump(buffer, size);
-       }
-   }
+    if (mySocket.shouldListen()) {
+        char* buffer = new char[65535];
+        int size = 0;
+        int ret = mySocket.receivePacketBlocking(buffer, size, 1);
+        if (ret > 0) {
+            LOG(__FUNCTION__, " get a packet!");
+            Utils::hexDump(buffer, size);
+        }
+    }
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }
@@ -234,7 +229,7 @@ int MyTcp::getFreeFD() { return 20; }
 UINT8 MyTcp::getFD() {
     std::unique_lock lk(myMutex);
     myCV.wait(lk, [] { return isFDAvailable; });  // wakes up if isFDAvailable is set
-    cout << "Conditional variable notified and isFDAvailable is set!\n";
+    LOG("Conditional variable notified and isFDAvailable is set!");
     UINT8 fd = mySockets.back().first;
     isFDAvailable = false;
     myMutex.unlock();
@@ -244,7 +239,7 @@ UINT8 MyTcp::getFD() {
 int MyTcp::getRetval() {
     std::unique_lock lk(myMutex);
     myCV.wait(lk, [] { return isRetValAvailable; });  // wakes up if the flag is set
-    cout << "Conditional variable notified and isRetValAvailable is set to val: " << retVal << "\n";
+    LOG("Conditional variable notified and isRetValAvailable is set to val: ", retVal, "");
     int ret = retVal;
     isRetValAvailable = false;
     myMutex.unlock();
