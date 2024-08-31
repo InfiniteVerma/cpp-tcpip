@@ -4,16 +4,18 @@
 #include <set>
 #include <string>
 
+#include "common.h"
+
 /*
  * This exposed to the user.
  */
 class UserSocket {
    public:
-    static int create(std::string s, std::string srcIp, std::string destIp, int port);
+    static UINT8 create(std::string s, std::string srcIp, std::string destIp, int port);
 
-    static int bind(int fd);
-    static int listen(int fd);
-    static int connect(int fd);
+    static int bind(UINT8 fd);
+    static int listen(UINT8 fd);
+    static int connect(UINT8 fd);
 
    private:
     UserSocket();

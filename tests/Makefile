@@ -28,12 +28,12 @@ $(TEST_OBJ_SERVER): $(TEST_SRC_SERVER)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Rule to link test_client executable
-$(CLIENT_EXEC): $(TEST_OBJ_CLIENT) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o
-	$(CC) $(CFLAGS) -o $(CLIENT_EXEC) $(TEST_OBJ_CLIENT) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o
+$(CLIENT_EXEC): $(TEST_OBJ_CLIENT) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o src/timer.o
+	$(CC) $(CFLAGS) -o $(CLIENT_EXEC) $(TEST_OBJ_CLIENT) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o src/timer.o
 
 # Rule to link test_server executable
-$(SERVER_EXEC): $(TEST_OBJ_SERVER) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o
-	$(CC) $(CFLAGS) -o $(SERVER_EXEC) $(TEST_OBJ_SERVER) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o
+$(SERVER_EXEC): $(TEST_OBJ_SERVER) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o src/timer.o
+	$(CC) $(CFLAGS) -o $(SERVER_EXEC) $(TEST_OBJ_SERVER) ./src/packet.o ./src/socket.o ./src/state_machine.o ./src/tcb.o ./src/mytcp.o ./src/user_socket.o ./src/messages.o src/timer.o
 
 # Clean target to remove generated files
 clean:

@@ -16,7 +16,7 @@ MyTcp* MyTcp::myTCPInstance = nullptr;
 thread MyTcp::myThread;
 int MyTcp::msgQueueID = -1;
 bool MyTcp::socketsAvailable = true;
-vector<pair<int, Socket>> MyTcp::mySockets;
+vector<pair<UINT8, Socket>> MyTcp::mySockets;
 
 std::condition_variable MyTcp::myCV;
 std::mutex MyTcp::myMutex;
@@ -93,7 +93,7 @@ void MyTcp::reactToUserCalls() {
             std::lock_guard lk(myMutex);
             pair<int, Socket> socketData = mySockets.back();
             if (socketData.first != myMsg.fd) {
-                cout << "Invalid fd passed\n";
+                cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
                 retVal = 1;
             } else {
                 socketData.second.bind();
@@ -108,17 +108,20 @@ void MyTcp::reactToUserCalls() {
              * This is block until 3-way handshake is done with a client?
              */
             std::lock_guard lk(myMutex);
-            pair<int, Socket> socketData = mySockets.back();
+            pair<UINT8, Socket> socketData = mySockets.back();
+            cout << "Listening socket with fd: <" << myMsg.fd << ">\n";
+            cout << "Stored fd: " << socketData.first << "\n";
             if (socketData.first != myMsg.fd) {
-                cout << "Invalid fd passed\n";
+                cout << "Invalid fd passed: <" << myMsg.fd << ">\n";
                 retVal = 1;
             } else {
                 socketData.second.listen();
-                retVal = 0;
+                // retVal = 0;
             }
-            isRetValAvailable = true;
-            cout << "LISTEN_SOCKET called !\n";
-            myCV.notify_one();
+            // isRetValAvailable = true;
+            cout << "LISTEN_SOCKET called !, not notifying conditional variable. Will wait till handshake completes or "
+                    "a timeout?\n";
+            // myCV.notify_one();
         } break;
         case CLOSE_SOCKET:
             cout << "CLOSE_SOCKET called TODO!\n";
@@ -142,11 +145,11 @@ const int MyTcp::getMsgQueueID() { return msgQueueID; }
 
 int MyTcp::getFreeFD() { return 20; }
 
-int MyTcp::getFD() {
+UINT8 MyTcp::getFD() {
     std::unique_lock lk(myMutex);
     myCV.wait(lk, [] { return isFDAvailable; });  // wakes up if isFDAvailable is set
     cout << "Conditional variable notified and isFDAvailable is set!\n";
-    int fd = mySockets.back().first;
+    UINT8 fd = mySockets.back().first;
     isFDAvailable = false;
     myMutex.unlock();
     return fd;

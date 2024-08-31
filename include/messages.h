@@ -21,6 +21,15 @@ struct MyMsg {
     char destIpAddr[16];
     UINT16 port;
 
+    MyMsg(MessageTypes mtype, int fd) {
+        this->mtype = mtype;
+        this->fd = static_cast<UINT8>(fd);
+        // this->socketName[0] = '\0';
+        // this->sourceIpAddr[0] = '\0';
+        // this->destIpAddr[0] = '\0';
+        // this->port = 0;
+    }
+
     MyMsg(MessageTypes mtype, const char* socketName, int socketNameLen, const char* sourceIpAddr, int sourceIpAddrLen,
           const char* destIpAddr, int destIpAddrLen, UINT16 port) {
         assert(("Invalid length" && (socketNameLen < 11 || sourceIpAddrLen < 16)));
@@ -42,8 +51,6 @@ struct MyMsg {
 
     MyMsg() {}
 
-    MyMsg(MessageTypes mtype, int fd) { this->mtype = mtype; }
-
     void print() {
         cout << "======MyMsg========\n";
         cout << "mtype: " << (MessageTypes)mtype << "\n"
@@ -51,7 +58,7 @@ struct MyMsg {
              << "sourceIpAddr: " << sourceIpAddr << "\n"
              << "destIpAddr: " << destIpAddr << "\n"
              << "port: " << port << "\n"
-             << "fd: " << fd << "\n";
+             << "fd: " << static_cast<int>(fd) << "\n";
     }
 };
 

@@ -11,7 +11,7 @@ class MyTcp {
     static void createMyTCP();
 
     const static int getMsgQueueID();
-    static int getFD();
+    static UINT8 getFD();
     static int getRetval();
 
    private:
@@ -31,7 +31,7 @@ class MyTcp {
     static int msgQueueID;
 
     // Socket mySocket; // TODO scale this
-    static vector<pair<int, Socket>> mySockets;
+    static vector<pair<UINT8, Socket>> mySockets;
     static bool socketsAvailable;
 
     static std::condition_variable myCV;
