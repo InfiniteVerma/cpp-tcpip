@@ -3,15 +3,18 @@
 
 #include <condition_variable>
 #include <thread>
+
 #include "socket.h"
 
 class MyTcp {
-public:
+   public:
     static void createMyTCP();
 
     const static int getMsgQueueID();
     static int getFD();
-private:
+    static int getRetval();
+
+   private:
     MyTcp();
     ~MyTcp();
 
@@ -24,10 +27,10 @@ private:
     static void recvPackets();
 
     static int getFreeFD();
-    
-    static int msgQueueID; 
 
-    //Socket mySocket; // TODO scale this
+    static int msgQueueID;
+
+    // Socket mySocket; // TODO scale this
     static vector<pair<int, Socket>> mySockets;
     static bool socketsAvailable;
 
@@ -35,6 +38,8 @@ private:
     static std::mutex myMutex;
 
     static bool isFDAvailable;
+    static bool isRetValAvailable;
+    static int retVal;
 };
 
 #endif

@@ -35,9 +35,9 @@ TCB::TCB() {
 
 TCB::~TCB() {
     // TODO fix below
-//    delete[] sendBuf;
-//    delete[] recvBuf;
-//    delete[] currentSegment;
+    //    delete[] sendBuf;
+    //    delete[] recvBuf;
+    //    delete[] currentSegment;
 }
 
 void TCB::updateState(ConnectionState state) { myState.updateState(state); }

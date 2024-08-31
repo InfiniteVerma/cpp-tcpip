@@ -1,7 +1,6 @@
 #include "messages.h"
 
-std::ostream &operator<<(std::ostream &os, const MessageTypes& msgType)
-{
+std::ostream &operator<<(std::ostream &os, const MessageTypes &msgType) {
     switch (msgType) {
         case CREATE_SOCKET:
             os << "CREATE_SOCKET";

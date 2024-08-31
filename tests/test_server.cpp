@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cassert>
 #include <cerrno>
 #include <cstring>
 #include <iostream>
@@ -37,6 +38,14 @@ void server() {
 
     cout << "Got fd: " << fd << "\n";
 
+    int ret = UserSocket::bindSocket(fd);
+
+    cout << "bind ret: " << ret << "\n";
+
+    assert("ret val is not 0" && ret == 0);
+
+    ret = UserSocket::listenSocket(fd);
+
     cout << "TODO handshake done!\n";
     sleep(200);
     // while (1) {
@@ -59,7 +68,7 @@ void server() {
     //        std::cout << "SERVER: buffer doesn't match close: " << buffer << "\n";
     //    }
     //}
-    //socket.close();
+    // socket.close();
 }
 
 int main() {

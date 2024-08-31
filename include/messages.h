@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstring>
+
 #include "common.h"
 enum MessageTypes {
     CREATE_SOCKET = 0,
@@ -14,17 +15,19 @@ enum MessageTypes {
 
 struct MyMsg {
     MessageTypes mtype;
+    UINT8 fd;
     char socketName[11];
     char sourceIpAddr[16];
     char destIpAddr[16];
     UINT16 port;
 
-    MyMsg(MessageTypes mtype, const char* socketName, int socketNameLen, const char* sourceIpAddr, int sourceIpAddrLen, const char* destIpAddr, int destIpAddrLen, UINT16 port)
-    {
+    MyMsg(MessageTypes mtype, const char* socketName, int socketNameLen, const char* sourceIpAddr, int sourceIpAddrLen,
+          const char* destIpAddr, int destIpAddrLen, UINT16 port) {
         assert(("Invalid length" && (socketNameLen < 11 || sourceIpAddrLen < 16)));
 
         this->mtype = mtype;
 
+        this->fd = 0;
         strncpy(this->socketName, socketName, socketNameLen);
         this->socketName[socketNameLen] = '\0';
 
@@ -39,17 +42,17 @@ struct MyMsg {
 
     MyMsg() {}
 
-    void print()
-    {
+    MyMsg(MessageTypes mtype, int fd) { this->mtype = mtype; }
+
+    void print() {
         cout << "======MyMsg========\n";
         cout << "mtype: " << (MessageTypes)mtype << "\n"
-            << "socketName: " << socketName << "\n"
-            << "sourceIpAddr: " << sourceIpAddr << "\n"
-            << "destIpAddr: " << destIpAddr << "\n"
-            << "port: " << port << "\n";
+             << "socketName: " << socketName << "\n"
+             << "sourceIpAddr: " << sourceIpAddr << "\n"
+             << "destIpAddr: " << destIpAddr << "\n"
+             << "port: " << port << "\n"
+             << "fd: " << fd << "\n";
     }
-    
 };
-
 
 #endif
