@@ -29,9 +29,10 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Payload -> TCP Segment + Payload -> IP Header + TCP Segment + Payload
 - [x] Reorganize code before it gets out of hand
 - [ ] Make a different thread for TCP stuff
-    - [ ] Redesign the socket design for 'userland' and 'kernel' thread state
-    - [ ] Communicate
-    - [ ] Move socket logic to new thread
+    - [x] Redesign the socket design for 'userland' and 'kernel' thread state
+    - [x] Communicate
+    - [x] Move socket logic to new thread
+    - [ ] Verify the handshake that worked before
 - [ ] Proper handshake
     - [ ] Full state machine
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
