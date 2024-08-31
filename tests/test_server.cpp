@@ -6,7 +6,9 @@
 #include <iostream>
 
 #include "mytcp.h"
-#include "socket.h"
+#include "user_socket.h"
+
+using namespace std;
 
 #define PORT 9000
 
@@ -17,6 +19,7 @@
 
 void server() {
     std::cout << "Hello from server thread\n";
+#if 0
     Socket socket("Server", "192.168.1.1", PORT);
 
     socket.setDestIp("192.168.1.2");
@@ -25,7 +28,17 @@ void server() {
 
     socket.debugPrint();
 
+#endif
+    string name = "Server";
+    string srcIp = "192.168.1.1";
+    string destIp = "192.168.1.2";
+
+    int fd = UserSocket::createSocket(name, srcIp, destIp, PORT);
+
+    cout << "Got fd: " << fd << "\n";
+
     cout << "TODO handshake done!\n";
+    sleep(200);
     // while (1) {
     //     int clientSocket = socket.accept();
     //     std::cout << "SERVER: clientSocket: " << clientSocket << "\n";
@@ -46,7 +59,7 @@ void server() {
     //        std::cout << "SERVER: buffer doesn't match close: " << buffer << "\n";
     //    }
     //}
-    socket.close();
+    //socket.close();
 }
 
 int main() {

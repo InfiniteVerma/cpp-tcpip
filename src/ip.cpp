@@ -10,7 +10,7 @@ unsigned int getChecksumVal(void *ipHeader) {
     unsigned long checksum = 0;  // making as long to detect overflow.
     char *data = (char *)ipHeader;
 
-    for (size_t i = 0; i + 1 < length; i += 2) {
+    for (long i = 0; i + 1 < length; i += 2) {
         unsigned int word;  // word == 16 bits == 2 bytes
         memcpy(&word, data + 1, 2);
         checksum += ntohs(word);  // to convert network byte (endianness as per

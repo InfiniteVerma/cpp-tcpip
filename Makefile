@@ -5,7 +5,7 @@ CC = g++
 CFLAGS = -Wall -g -Werror -Iinclude
 
 # List of source files
-SRC = src/main.cpp src/packet.cpp src/socket.cpp src/tcb.cpp src/state_machine.cpp src/mytcp.cpp
+SRC = src/main.cpp src/packet.cpp src/socket.cpp src/tcb.cpp src/state_machine.cpp src/mytcp.cpp src/user_socket.cpp src/messages.cpp
 
 # List of object files
 OBJ = $(SRC:.cpp=.o)

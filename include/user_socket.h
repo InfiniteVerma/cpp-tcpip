@@ -8,7 +8,8 @@
  * This exposed to the user. 
  */
 class UserSocket {
-    int createSocket(std::string s, const char *ip, int port);
+public:
+    static int createSocket(std::string s, std::string srcIp, std::string destIp, int port);
 private:
     UserSocket();
     ~UserSocket();
