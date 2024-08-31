@@ -32,11 +32,12 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Redesign the socket design for 'userland' and 'kernel' thread state
     - [x] Communicate
     - [x] Move socket logic to new thread
+    - [x] Implement timer logic
     - [ ] Verify the handshake that worked before
 - [ ] Proper handshake
     - [ ] Full state machine
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
-- [ ] Retransmission queue + Timer logic
+- [ ] Retransmission queue
     - [ ] Test 3 way handshake with this
 - [ ] Try sending a packet after connection is established
 - [ ] Sequence window logic
