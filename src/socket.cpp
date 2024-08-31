@@ -217,6 +217,7 @@ void Socket::listen()  // TODO support backlog queue
 {
     LOG("Starting to listen for SYN pkts\n");
     tcb.updateState(LISTEN);
+    debugPrint();
 
 #if 0
     char *buffer = new char[65535];
@@ -265,6 +266,7 @@ void Socket::listen()  // TODO support backlog queue
 }
 
 int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
+    LOG(__FUNCTION__, " BEGIN ");
     fd_set rfds;
     struct timeval tv;
 
@@ -277,6 +279,7 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
 
     // Use select to wait for data to be available
     int retval = select(socketFd + 1, &rfds, NULL, NULL, &tv);
+    LOG(__FUNCTION__, " select retuned ret val: ", retval);
 
     if (retval == -1) {
         perror("select()");
@@ -301,7 +304,6 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
             // Successfully received data
             LOG("Received a packet of size: ", size, "\n");
         }
-
         return retval;
     } else {
         // No data within the timeout period

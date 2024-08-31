@@ -18,7 +18,7 @@ MyTcp* MyTcp::myTCPInstance = nullptr;
 thread MyTcp::myThread;
 int MyTcp::msgQueueID = -1;
 bool MyTcp::socketsAvailable = true;
-vector<pair<UINT8, Socket>> MyTcp::mySockets;
+vector<pair<UINT8, Socket*>> MyTcp::mySockets;
 
 std::condition_variable MyTcp::myCV;
 std::mutex MyTcp::myMutex;
@@ -34,9 +34,9 @@ MyTcp::MyTcp() {
     myThread = thread(startTCPThread);
 
     // just for testing
-    Timer* timerInstance = Timer::getInstance();
-    ScheduledTask* task = new ScheduledTask(2.0, []() { LOG("Example timeout of 2 seconds, remove!"); });
-    timerInstance->addTask(task);
+    // Timer* timerInstance = Timer::getInstance();
+    // ScheduledTask* task = new ScheduledTask(2.0, []() { LOG("Example timeout of 2 seconds, remove!"); });
+    // timerInstance->addTask(task);
 }
 
 MyTcp::~MyTcp() {
@@ -94,7 +94,7 @@ void MyTcp::reactToUserCalls() {
     if (ret == -1) return;
 
     LOG("MyTcp got a message!");
-    myMsg.print();
+    // myMsg.print();
 
     switch (myMsg.mtype) {
         case CREATE_SOCKET:
@@ -102,11 +102,11 @@ void MyTcp::reactToUserCalls() {
                 std::lock_guard lk(myMutex);
                 LOG("Creating a new socket");
 
-                Socket newSocket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
+                Socket* newSocket = new Socket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
                 int newFD = getFreeFD();
                 isFDAvailable = true;
 
-                newSocket.setDestIp(myMsg.destIpAddr);
+                newSocket->setDestIp(myMsg.destIpAddr);
                 mySockets.push_back(make_pair(newFD, newSocket));
 
                 LOG("Socket created and added to mySockets, fd: ", newFD, "");
@@ -118,12 +118,12 @@ void MyTcp::reactToUserCalls() {
             break;
         case BIND_SOCKET: {
             std::lock_guard lk(myMutex);
-            pair<int, Socket> socketData = mySockets.back();
+            pair<int, Socket*> socketData = mySockets.back();
             if (socketData.first != myMsg.fd) {
                 LOG("Invalid fd passed: <", myMsg.fd, ">");
                 retVal = 1;
             } else {
-                socketData.second.bind();
+                socketData.second->bind();
                 retVal = 0;
             }
             isRetValAvailable = true;
@@ -135,19 +135,17 @@ void MyTcp::reactToUserCalls() {
              * This is block until 3-way handshake is done with a client?
              */
             std::lock_guard lk(myMutex);
-            pair<UINT8, Socket> socketData = mySockets.back();
+            pair<UINT8, Socket*> socketData = mySockets.back();
             LOG("Listening socket with fd: <", myMsg.fd, ">");
             LOG("Stored fd: ", socketData.first, "");
             if (socketData.first != myMsg.fd) {
                 LOG("Invalid fd passed: <", myMsg.fd, ">");
                 retVal = 1;
             } else {
-                socketData.second.listen();
+                socketData.second->listen();
                 // retVal = 0;
             }
             // isRetValAvailable = true;
-            LOG("LISTEN_SOCKET called !, not notifying conditional variable. Will wait till handshake completes or a "
-                "timeout?");
             // myCV.notify_one();
         } break;
         case CLOSE_SOCKET:
@@ -155,19 +153,19 @@ void MyTcp::reactToUserCalls() {
             break;
         case CONNECT_SOCKET: {
             LOG("CONNECT_SOCKET called ongoing!");
-            pair<UINT8, Socket> socketData = mySockets.back();
+            pair<UINT8, Socket*> socketData = mySockets.back();
             if (socketData.first != myMsg.fd) {
                 LOG("Invalid fd passed: <", myMsg.fd, ">");
                 retVal = 1;
             } else {
-                int retVal = socketData.second.connect();
+                int retVal = socketData.second->connect();
                 if (retVal != 0) {
                     isRetValAvailable = true;
                     myCV.notify_one();
                 } else {
                     // TODO add 5 seconds timer which if fails should return error code
                     Timer* timerInstance = Timer::getInstance();
-                    ScheduledTask* task = new ScheduledTask(5.0, []() {
+                    ScheduledTask* task = new ScheduledTask(10.0, []() {
                         LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
                         MyTcp::setRetVal(1);
@@ -197,7 +195,6 @@ void MyTcp::processTimeouts() {
 
     Timer* timerInstance = Timer::getInstance();
     timerInstance->runTimeouts();
-    this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void MyTcp::recvPackets() {
@@ -207,18 +204,22 @@ void MyTcp::recvPackets() {
     if (mySockets.empty()) return;
 
     // iterate and check if they are in LISTEN mode?
-    pair<UINT8, Socket> mySocketData = mySockets.back();
+    pair<UINT8, Socket*> mySocketData = mySockets.back();
 
-    Socket mySocket = mySocketData.second;
+    Socket* mySocket = mySocketData.second;
 
-    if (mySocket.shouldListen()) {
+    if (mySocket->shouldListen()) {
         char* buffer = new char[65535];
         int size = 0;
-        int ret = mySocket.receivePacketBlocking(buffer, size, 1);
+        int ret = mySocket->receivePacketBlocking(buffer, size, 4);
         if (ret > 0) {
             LOG(__FUNCTION__, " get a packet!");
             Utils::hexDump(buffer, size);
+        } else {
+            LOG(__FUNCTION__, " no packet!");
         }
+    } else {
+        LOG(__FUNCTION__, " socket not in listen stage!");
     }
 }
 

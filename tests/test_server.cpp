@@ -44,10 +44,11 @@ void server() {
 
     assert("ret val is not 0" && ret == 0);
 
-    // ret = UserSocket::listen(fd);
+    ret = UserSocket::listen(fd);
+
+    LOG("listen ret: ", ret, "\n");
 
     LOG("TODO listen handshake done!\n");
-    sleep(200);
     // while (1) {
     //     int clientSocket = socket.accept();
     //     gLOG("SERVER: clientSocket: " , clientSocket , "\n");

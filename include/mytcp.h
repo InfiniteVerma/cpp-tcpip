@@ -34,7 +34,7 @@ class MyTcp {
     static bool isStopped;
 
     // Socket mySocket; // TODO scale this
-    static vector<pair<UINT8, Socket>> mySockets;
+    static vector<pair<UINT8, Socket*>> mySockets;
     static bool socketsAvailable;
 
     static std::condition_variable myCV;

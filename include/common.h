@@ -17,7 +17,9 @@ typedef uint32_t UINT32;
 const std::string RESET = "\033[0m";
 const std::string MAGENTA = "\033[35m";
 const std::string GREEN = "\033[32m";
+const std::string BLUE = "\033[34m";
 const std::string CYAN = "\033[36m";
+const std::string WHITE = "\033[37m";
 
 class Utils {
    public:
@@ -60,7 +62,7 @@ class Utils {
         ostringstream oss;
 
         string color = CYAN;
-        if (threadDetails[tmp.str()] == "Kernel") color = GREEN;
+        if (threadDetails[tmp.str()] == "Kernel") color = MAGENTA;
 
         oss << "|" << threadDetails[tmp.str()].c_str() << "| ";
         // oss << "File: " << file << " Line: " << line << " ";
