@@ -92,9 +92,13 @@ void MyTcp::reactToUserCalls() {
         case BIND_SOCKET: {
             std::lock_guard lk(myMutex);
             pair<int, Socket> socketData = mySockets.back();
-            socketData.second.bind();
-
-            retVal = 0;
+            if (socketData.first != myMsg.fd) {
+                cout << "Invalid fd passed\n";
+                retVal = 1;
+            } else {
+                socketData.second.bind();
+                retVal = 0;
+            }
             isRetValAvailable = true;
             cout << "BIND_SOCKET called done!\n";
             myCV.notify_one();
@@ -105,9 +109,13 @@ void MyTcp::reactToUserCalls() {
              */
             std::lock_guard lk(myMutex);
             pair<int, Socket> socketData = mySockets.back();
-            socketData.second.listen();
-
-            retVal = 0;
+            if (socketData.first != myMsg.fd) {
+                cout << "Invalid fd passed\n";
+                retVal = 1;
+            } else {
+                socketData.second.listen();
+                retVal = 0;
+            }
             isRetValAvailable = true;
             cout << "LISTEN_SOCKET called !\n";
             myCV.notify_one();
@@ -147,7 +155,7 @@ int MyTcp::getFD() {
 int MyTcp::getRetval() {
     std::unique_lock lk(myMutex);
     myCV.wait(lk, [] { return isRetValAvailable; });  // wakes up if the flag is set
-    cout << "Conditional variable notified and isRetValAvailable is set!\n";
+    cout << "Conditional variable notified and isRetValAvailable is set to val: " << retVal << "\n";
     int ret = retVal;
     isRetValAvailable = false;
     myMutex.unlock();

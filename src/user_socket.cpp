@@ -13,7 +13,7 @@
  * Further stuff will be called with key as the fd (similar to how tcp/ip works in the linux kernel)
  *
  */
-int UserSocket::createSocket(std::string s, std::string srcIp, std::string destIp, int port) {
+int UserSocket::create(std::string s, std::string srcIp, std::string destIp, int port) {
     int msgQueueID = MyTcp::getMsgQueueID();
 
     cout << "MsgQueueID: " << msgQueueID << "\n";
@@ -35,7 +35,7 @@ int UserSocket::createSocket(std::string s, std::string srcIp, std::string destI
     return fd;  // TODO
 }
 
-int UserSocket::bindSocket(int fd) {
+int UserSocket::bind(int fd) {
     MyMsg msg(BIND_SOCKET, fd);
 
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(msg), 0);
@@ -44,10 +44,10 @@ int UserSocket::bindSocket(int fd) {
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
-    return 0;
+    return ret;
 }
 
-int UserSocket::listenSocket(int fd) {
+int UserSocket::listen(int fd) {
     MyMsg msg(LISTEN_SOCKET, fd);
 
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(msg), 0);

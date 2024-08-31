@@ -34,17 +34,17 @@ void server() {
     string srcIp = "192.168.1.1";
     string destIp = "192.168.1.2";
 
-    int fd = UserSocket::createSocket(name, srcIp, destIp, PORT);
+    int fd = UserSocket::create(name, srcIp, destIp, PORT);
 
     cout << "Got fd: " << fd << "\n";
 
-    int ret = UserSocket::bindSocket(fd);
+    int ret = UserSocket::bind(fd);
 
     cout << "bind ret: " << ret << "\n";
 
     assert("ret val is not 0" && ret == 0);
 
-    ret = UserSocket::listenSocket(fd);
+    ret = UserSocket::listen(fd);
 
     cout << "TODO handshake done!\n";
     sleep(200);

@@ -38,7 +38,7 @@ void client() {
     string srcIp = "192.168.1.2";
     string destIp = "192.168.1.1";
 
-    int fd = UserSocket::createSocket(name, srcIp, destIp, PORT);
+    int fd = UserSocket::create(name, srcIp, destIp, PORT);
 
     cout << "fd: " << fd << "\n";
 

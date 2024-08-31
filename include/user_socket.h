@@ -9,10 +9,11 @@
  */
 class UserSocket {
    public:
-    static int createSocket(std::string s, std::string srcIp, std::string destIp, int port);
+    static int create(std::string s, std::string srcIp, std::string destIp, int port);
 
-    static int bindSocket(int fd);
-    static int listenSocket(int fd);
+    static int bind(int fd);
+    static int listen(int fd);
+    static int connect(int fd);
 
    private:
     UserSocket();
