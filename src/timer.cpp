@@ -1,26 +1,45 @@
-// clang-format off
 #include "timer.h"
-#include <sched.h>
-#include <chrono>
-#include "iostream"
-// clang-format on
 
-ScheduledTask::ScheduledTask(chrono::system_clock::time_point start_point, chrono::milliseconds delta) {
-    this->start_point = start_point;
+#include <sched.h>
+
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+#include <thread>
+
+#include "iostream"
+
+void printTime(std::time_t time) { std::cout << std::put_time(std::localtime(&time), "%F %T"); }
+
+ScheduledTask::ScheduledTask(double delta) {
+    this->last_checked_time = time(nullptr);
     this->delta = delta;
 }
 
 bool ScheduledTask::hasElapsed() {
-    chrono::system_clock::time_point currentTime = chrono::system_clock::now();
+    // cout << __FUNCTION__ << " BEGIN\n";
+    std::time_t current_time = time(nullptr);
 
-    bool isElapsed = (currentTime - start_point) > delta;
+    double elapsed_seconds = difftime(current_time, last_checked_time);
 
-    if (isElapsed) start_point = currentTime;
+    bool isElapsed = elapsed_seconds >= delta;
+
+    if (isElapsed) {
+        // Update last checked time
+        last_checked_time = current_time;
+        // std::cout << "ELAPSED!!\n";
+        // std::cout << "diff: " << elapsed_seconds << " seconds\n";
+        // std::cout << "delta: " << delta << " seconds\n";
+        // std::cout << "currentTime: ";
+        // printTime(current_time);
+        // std::cout << " - lastCheckedTime: ";
+        // printTime(last_checked_time);
+    }
 
     return isElapsed;
 }
 
-void ScheduledTask::executeCallback() { std::cout << "Timer elapsed, executing callback!\n\n"; }
+void ScheduledTask::executeCallback() { std::cout << "ANANT Timer elapsed, executing callback!!\n\n"; }
 
 Timer* Timer::myTimerInstance = nullptr;
 
@@ -36,6 +55,14 @@ Timer* Timer::getInstance() {
     return myTimerInstance;
 }
 
-void Timer::addTask(ScheduledTask task) { scheduledTasks.push_back(task); }
+void Timer::addTask(ScheduledTask* task) { scheduledTasks.push_back(task); }
 
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
+
+void Timer::runTimeouts() {
+    for (ScheduledTask* task : scheduledTasks) {
+        if (task->hasElapsed()) {
+            task->executeCallback();
+        }
+    }
+}

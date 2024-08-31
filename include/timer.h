@@ -10,25 +10,26 @@ using namespace std;
 class ScheduledTask {
    public:
     bool hasElapsed();
-    ScheduledTask(chrono::system_clock::time_point start_point, chrono::milliseconds delta);
+    ScheduledTask(double delta);
     void executeCallback();
 
    private:
-    chrono::system_clock::time_point start_point;
-    chrono::milliseconds delta;
+    time_t last_checked_time;
+    double delta;
 };
 
 class Timer {
    public:
-    void addTask(ScheduledTask task);
+    void addTask(ScheduledTask* task);
     void listTasks();
+    void runTimeouts();
 
     static Timer* getInstance();
 
    private:
     Timer();
     ~Timer();
-    vector<ScheduledTask> scheduledTasks;
+    vector<ScheduledTask*> scheduledTasks;
 
     static Timer* myTimerInstance;
 };

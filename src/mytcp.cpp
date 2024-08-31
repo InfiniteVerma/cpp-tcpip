@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "messages.h"
+#include "timer.h"
 
 using namespace std;
 
@@ -29,6 +30,11 @@ MyTcp::MyTcp() {
     // create the msgqueue
     msgQueueID = msgget(IPC_PRIVATE, IPC_CREAT | 0600);
     myThread = thread(startTCPThread);
+
+    // just for testing
+    Timer* timerInstance = Timer::getInstance();
+    ScheduledTask* task = new ScheduledTask(10.0);
+    timerInstance->addTask(task);
 }
 
 MyTcp::~MyTcp() {
@@ -58,7 +64,7 @@ void MyTcp::startTCPThread() {
 }
 
 void MyTcp::reactToUserCalls() {
-    cout << __FUNCTION__ << " BEGIN (ONGOING)\n";
+    // cout << __FUNCTION__ << " BEGIN (ONGOING)\n";
 
     MyMsg myMsg;
 
@@ -132,13 +138,15 @@ void MyTcp::reactToUserCalls() {
 }
 
 void MyTcp::processTimeouts() {
-    cout << __FUNCTION__ << " BEGIN (TODO)\n";
-    std::this_thread::sleep_for(2000ms);
+    // cout << __FUNCTION__ << " BEGIN (TODO)\n";
+    // cout << __FUNCTION__ << " iterating through timer tasks and checking!\n";
+
+    Timer* timerInstance = Timer::getInstance();
+    timerInstance->runTimeouts();
 }
 
 void MyTcp::recvPackets() {
-    cout << __FUNCTION__ << " BEGIN (TODO)\n";
-    std::this_thread::sleep_for(2000ms);
+    // cout << __FUNCTION__ << " BEGIN (TODO)\n";
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }

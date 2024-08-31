@@ -44,9 +44,9 @@ void server() {
 
     assert("ret val is not 0" && ret == 0);
 
-    ret = UserSocket::listen(fd);
+    // ret = UserSocket::listen(fd);
 
-    cout << "TODO handshake done!\n";
+    cout << "TODO listen handshake done!\n";
     sleep(200);
     // while (1) {
     //     int clientSocket = socket.accept();
