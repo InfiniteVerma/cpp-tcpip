@@ -20,6 +20,7 @@ const std::string GREEN = "\033[32m";
 const std::string BLUE = "\033[34m";
 const std::string CYAN = "\033[36m";
 const std::string WHITE = "\033[37m";
+const std::string ORANGE = "\033[38;5;208m";
 
 class Utils {
    public:
@@ -62,7 +63,7 @@ class Utils {
         ostringstream oss;
 
         string color = CYAN;
-        if (threadDetails[tmp.str()] == "Kernel") color = MAGENTA;
+        if (threadDetails[tmp.str()] == "Kernel") color = ORANGE;
 
         oss << "|" << threadDetails[tmp.str()].c_str() << "| ";
         // oss << "File: " << file << " Line: " << line << " ";

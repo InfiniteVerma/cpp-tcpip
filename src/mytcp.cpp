@@ -10,6 +10,7 @@
 
 #include "common.h"
 #include "messages.h"
+#include "state_machine.h"
 #include "timer.h"
 
 using namespace std;
@@ -193,7 +194,7 @@ void MyTcp::recvPackets() {
 
     if (mySockets.empty()) return;
 
-    // iterate and check if they are in LISTEN mode?
+    // TODO iterate and check if they are in LISTEN mode?
     pair<UINT8, Socket*> mySocketData = mySockets.back();
 
     Socket* mySocket = mySocketData.second;
@@ -205,9 +206,18 @@ void MyTcp::recvPackets() {
         if (ret > 0) {
             LOG(__FUNCTION__, " get a packet! Hexdump:");
             Utils::hexDump(buffer, size);
+            ACTION action = mySocket->updateState(buffer, size);
+            if (!action && mySocket->getCurrentState() == ESTABLISHED) {
+                LOG(__FUNCTION__, " ESTABLISHED!");
+            } else {
+                mySocket->executeNextAction(action);
+                LOG(__FUNCTION__, " executed next action");
+            }
         } else {
-            LOG(__FUNCTION__, " no packet, returning");
+            // LOG(__FUNCTION__, " no packet, returning");
         }
+
+        delete[] buffer;
     } else {
         // LOG(__FUNCTION__, " socket not in listen stage!");
     }

@@ -4,6 +4,7 @@
 #include <bitset>
 
 #include "packet.h"
+#include "state_machine.h"
 #include "tcb.h"
 #include "tcp.h"
 
@@ -25,6 +26,9 @@ class Socket {
     void close();
     int accept();
     bool shouldListen();
+    ACTION updateState(char *buf, int size);
+    void executeNextAction(ACTION action);
+    ConnectionState getCurrentState();
 
     static int allocateEphemeralPortNum();
     static void freeEphemeralPortNum(int portNum);

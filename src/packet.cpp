@@ -9,13 +9,12 @@
 Packet::Packet(int sourcePort, int destPort) : tcpHeader(sourcePort, destPort), size(0) {}
 
 Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
-    LOG("Packet constructor, parsing the pkt\n");
+    LOG("Packet constructor, parsing the pkt");
     memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
     memcpy(&tcpHeader, rawPacket + sizeof(IPHeader), sizeof(TCPHeader));
-    LOG("Memcpy done\n");
 
-    LOG("flags set: ", tcpHeader.data_offset_and_flags, "\n");
-    LOG("sequence no: ", tcpHeader.seq_number, "\n");
+    LOG("flags set: ", tcpHeader.data_offset_and_flags);
+    LOG("sequence no: ", tcpHeader.seq_number);
 }
 
 const char *Packet::makePacket() {
@@ -76,8 +75,8 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
 
-    LOG("Sending packet with source ip: ", pktData.sourceIp, "\n");
-    LOG("Sending packet with dest ip: ", pktData.destIp, "\n");
+    LOG("Sending packet with source ip: ", pktData.sourceIp);
+    LOG("Sending packet with dest ip: ", pktData.destIp);
 
     return packet;
 }
@@ -98,8 +97,8 @@ Packet Packet::getAckPacket(PktData pktData) {
 
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
-    LOG("Sending packet with source ip: ", pktData.sourceIp, "\n");
-    LOG("Sending packet with dest ip: ", pktData.destIp, "\n");
+    LOG("Sending packet with source ip: ", pktData.sourceIp);
+    LOG("Sending packet with dest ip: ", pktData.destIp);
 
     packet.setTCPFlags((1 << 4));  // ACK
     packet.setAckNumber(pktData.ackNumber);

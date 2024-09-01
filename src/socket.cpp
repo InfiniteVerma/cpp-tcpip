@@ -15,6 +15,7 @@
 #include <ctime>
 
 #include "ip.h"
+#include "mytcp.h"
 #include "packet.h"
 #include "state_machine.h"
 #include "tcb.h"
@@ -63,7 +64,8 @@ Socket::Socket(std::string desc, const char *ip, int port) {
     socketFd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 
     /*
-     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after reactToUserCalls ends
+     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after
+     * reactToUserCalls ends
      */
     this->sourceIp = new char[strlen(ip) + 1];
     strcpy(sourceIp, ip);
@@ -88,7 +90,8 @@ Socket::~Socket() {
 
 void Socket::setDestIp(const char *ip) {
     /*
-     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after reactToUserCalls ends
+     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after
+     * reactToUserCalls ends
      */
     this->destIp = new char[strlen(ip) + 1];
     strcpy(destIp, ip);
@@ -158,13 +161,13 @@ int Socket::connect() {
  *    - starts timer, adds pkt to transmission queue
  */
 int Socket::threeWayHandshakeClient() {
-    LOG(__FUNCTION__, " BEGIN\n");
+    // LOG(__FUNCTION__, " BEGIN\n");
 
     tcb.updateState(CLOSED);  // To update FSM
 
     ACTION firstAction = tcb.updateState(NULL, 0);
 
-    LOG(__FUNCTION__, "Making packet with source IP: ", this->sourceIp, " dest IP: ", this->destIp);
+    // LOG(__FUNCTION__, "Making packet with source IP: ", this->sourceIp, " dest IP: ", this->destIp);
 
     Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
 
@@ -174,8 +177,7 @@ int Socket::threeWayHandshakeClient() {
     sendPacket(pkt);
     LOG("1st SYN sent\n");
 
-    debugPrint();
-    LOG("Starting timer\n");
+    // debugPrint();
 
 #if 0
     char *buffer = new char[65535];
@@ -293,7 +295,7 @@ void Socket::listen()  // TODO support backlog queue
 }
 
 int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
-    LOG(__FUNCTION__, " BEGIN ");
+    // LOG(__FUNCTION__, " BEGIN ");
     fd_set rfds;
     struct timeval tv;
 
@@ -306,7 +308,7 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
 
     // Use select to wait for data to be available
     int retval = select(socketFd + 1, &rfds, NULL, NULL, &tv);
-    LOG(__FUNCTION__, " select retuned ret val: ", retval);
+    // LOG(__FUNCTION__, " select retuned ret val: ", retval);
 
     if (retval == -1) {
         perror("select()");
@@ -329,12 +331,12 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
             printf("Peer has performed an orderly shutdown\n");
         } else {
             // Successfully received data
-            LOG("Received a packet of size: ", size, "\n");
+            LOG(__FUNCTION__, " Received a packet of size: ", size);
         }
         return retval;
     } else {
         // No data within the timeout period
-        printf("No data within %d seconds.\n", seconds);
+        // LOG(__FUNCTION__, " No data within ", seconds, " seconds");
         return 0;
     }
 }
@@ -345,7 +347,7 @@ void Socket::receivePacketNonBlocking(char *buffer, int &size) {
     size = recvfrom(socketFd, buffer, 100000, 0, &saddr,
                     &socklen);  // TODO make it blocking?
 
-    LOG("recvfrom returned size: ", size, "\n");
+    LOG("recvfrom returned size: ", size);
 
     if (size == 0) {
         // peer has performed an orderly shutdown
@@ -357,13 +359,13 @@ void Socket::receivePacketNonBlocking(char *buffer, int &size) {
             desc.c_str(), errno, strerror(errno));
         assert(0);
     } else {
-        LOG("Receive a packet of size: ", size, "\n");
+        LOG("Receive a packet of size: ", size);
     }
 }
 
 // TODO to be used after handshake completes
 void Socket::send(const char *message, size_t len, int flags) {
-    LOG("Client: sending: ", message, " - len: ", len, "\n");
+    LOG("Client: sending: ", message, " - len: ", len);
 
     sockaddr_in saddr = {};
     // saddr.sin_family = AF_INET;
@@ -445,3 +447,20 @@ bool Socket::shouldListen() {
     // LOG(__FUNCTION__ , " TODO fix this properly\n");
     return (tcb.getState() != CLOSED);
 }
+
+ACTION Socket::updateState(char *buf, int size) {
+    LOG(__FUNCTION__, " BEGIN");
+    return tcb.updateState(buf, size);
+}
+
+void Socket::executeNextAction(ACTION action) {
+    LOG(__FUNCTION__, " BEGIN");
+    if (!action) {
+        LOG(__FUNCTION__, " action is NULL, current statue: ", tcb.getState(), " returning!");
+    } else {
+        Packet pkt = action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
+        sendPacket(pkt);
+    }
+}
+
+ConnectionState Socket::getCurrentState() { return tcb.getState(); }

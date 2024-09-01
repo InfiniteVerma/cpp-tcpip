@@ -34,7 +34,8 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Move socket logic to new thread
     - [x] Implement timer logic
     - [x] Stop the kernel thread gracefully
-    - [ ] Verify the handshake that worked before
+    - [x] Verify the handshake that worked before
+    - [ ] Stop threads once handshake is done for now
 - [ ] Proper handshake
     - [ ] Full state machine
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
@@ -44,6 +45,12 @@ Continuously iterating on it since there's so much going on here :)
 - [ ] Sequence window logic
 
 End goal: Sending a file as a byte stream over this tcp/ip implementation
+
+#### Funny isses
+
+ - Assigned a char* pointer from MyMsg into a packet but the MyMsg instance gets deleted so pointer now pointed to undefined area.
+ - Assigned and mutated a local copy of an object and then was confused why the actual object wasn't updated.
+ - Called join of the second thread in it's own context (instead of main thread) causing an exception
 
 #### References
  - https://datatracker.ietf.org/doc/html/rfc791/

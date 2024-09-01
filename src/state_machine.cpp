@@ -10,7 +10,7 @@ TCBStateM::TCBStateM() { state = CLOSED; }
 ConnectionState TCBStateM::getState() { return state; }
 
 ACTION TCBStateM::updateState(char *pkt, int size) {
-    cout << __FUNCTION__ << " BEGIN current State: " << state << "\n";
+    LOG(__FUNCTION__, " BEGIN current State: ", state);
 
     if (!pkt && state == CLOSED)  // TODO better way?
     {
@@ -23,15 +23,15 @@ ACTION TCBStateM::updateState(char *pkt, int size) {
     // iterate through FSM, find matching current state. If not match?
     for (auto itr : FSM) {
         if (itr.currentState == state) {
-            cout << "Found matching state: " << state << "\n";
+            LOG("Found matching state: ", state);
             if (itr.checker(parsedPacket)) {
-                cout << "Checker passed! Updating state\n";
+                LOG("Checker passed! Updating state");
                 state = itr.nextState;
                 return itr.action;
             }
         }
     }
-    cout << "Could not find a valid ACTION, returning NULL\n";
+    LOG("Could not find a valid ACTION, returning NULL\n");
     assert(0);
     return NULL;
 }
