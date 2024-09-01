@@ -49,7 +49,7 @@ Continuously iterating on it since there's so much going on here :)
 
 End goal: Sending a file as a byte stream over this tcp/ip implementation
 
-#### Funny isses
+#### Stupid mistakes I did
 
  - Assigned a char* pointer from MyMsg into a packet but the MyMsg instance gets deleted so pointer now pointed to undefined area.
  - Assigned and mutated a local copy of an object and then was confused why the actual object wasn't updated.
