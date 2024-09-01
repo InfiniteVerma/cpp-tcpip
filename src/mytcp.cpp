@@ -39,14 +39,7 @@ MyTcp::MyTcp() {
     // timerInstance->addTask(task);
 }
 
-MyTcp::~MyTcp() {
-    LOG("Stopping myThread");
-    if (myThread.joinable()) {
-        myThread.join();  // TODO cleanup
-    } else {
-        LOG("ERROR, can't join!");
-    }
-}
+MyTcp::~MyTcp() { LOG("Destructor called!"); }
 
 void MyTcp::createMyTCP(string mainThreadName) {
     Utils::addThreadInfo(mainThreadName);
@@ -60,6 +53,7 @@ void MyTcp::startTCPThread() {
     while (!isStopped) {
         /* 1. react to calls from client */
         reactToUserCalls();
+        if (isStopped) break;
         /* 2. Process timeouts */
         processTimeouts();
         /* 3. Recv pkt */
@@ -67,20 +61,16 @@ void MyTcp::startTCPThread() {
     }
 }
 
-void MyTcp::stopMyTCP() {
-    LOG("Stopping myThread");
+void MyTcp::stopTCPThread() {
+    LOG(__FUNCTION__, " BEGIN");
     isStopped = true;
+
     /* destroy message queue */
     if (msgctl(msgQueueID, IPC_RMID, NULL) == -1) {
         LOG("Failed in deleting message queue!");
     }
-    LOG("Deleted the msg queue!");
-    if (myThread.joinable()) {
-        myThread.join();  // TODO cleanup
-    } else {
-        LOG("ERROR, can't join!");
-    }
 
+    LOG(__FUNCTION__, " Deleted the msg queue!");
     delete myTCPInstance;
 }
 
@@ -175,6 +165,10 @@ void MyTcp::reactToUserCalls() {
                 }
             }
         } break;
+        case STOP_TCP_THREAD: {
+            stopTCPThread();
+            LOG(__FUNCTION__, " STOP_TCP_THREAD call reached kernel!");
+        } break;
         default:
             assert(0);
     }
@@ -246,3 +240,5 @@ int MyTcp::getRetval() {
     myMutex.unlock();
     return ret;
 }
+
+void MyTcp::waitForThreadToDie() { myThread.join(); }

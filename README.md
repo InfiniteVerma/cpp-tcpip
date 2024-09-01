@@ -33,6 +33,7 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Communicate
     - [x] Move socket logic to new thread
     - [x] Implement timer logic
+    - [x] Stop the kernel thread gracefully
     - [ ] Verify the handshake that worked before
 - [ ] Proper handshake
     - [ ] Full state machine

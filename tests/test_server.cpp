@@ -75,6 +75,7 @@ void server() {
 int main() {
     MyTcp::createMyTCP("Server");
     server();
-    MyTcp::stopMyTCP();
+    UserSocket::stopTCP();
+    MyTcp::waitForThreadToDie();
     return 0;
 }

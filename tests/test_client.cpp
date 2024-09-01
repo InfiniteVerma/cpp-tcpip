@@ -57,6 +57,6 @@ int main() {
     MyTcp::createMyTCP("Client");
     client();
     LOG("Stopping the threads");
-    MyTcp::stopMyTCP();
+    UserSocket::stopTCP();
     return 0;
 }

@@ -207,6 +207,8 @@ void Socket::sendPacket(Packet pkt) {
     destAddress.sin_addr.s_addr = inet_addr(sourceIp);
 
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress, sizeof(destAddress));
+
+    LOG(__FUNCTION__, "sendto done");
 }
 
 /*

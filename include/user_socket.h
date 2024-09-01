@@ -17,6 +17,8 @@ class UserSocket {
     static int listen(UINT8 fd);
     static int connect(UINT8 fd);
 
+    static int stopTCP();
+
    private:
     UserSocket();
     ~UserSocket();

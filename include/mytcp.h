@@ -9,18 +9,21 @@
 class MyTcp {
    public:
     static void createMyTCP(string threadName);
-    static void stopMyTCP();
 
     const static int getMsgQueueID();
     static UINT8 getFD();
     static int getRetval();
     static void setRetVal(int);
 
+    static void waitForThreadToDie();
+
    private:
     MyTcp();
     ~MyTcp();
 
     static void startTCPThread();
+    static void stopTCPThread();
+
     static MyTcp* myTCPInstance;
     static std::thread myThread;
 

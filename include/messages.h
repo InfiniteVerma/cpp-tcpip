@@ -11,6 +11,7 @@ enum MessageTypes {
     BIND_SOCKET,
     LISTEN_SOCKET,
     CONNECT_SOCKET,
+    STOP_TCP_THREAD,
     ERROR,
 };
 
@@ -51,6 +52,8 @@ struct MyMsg {
     }
 
     MyMsg() {}
+
+    MyMsg(MessageTypes mtype) { this->mtype = mtype; }
 
     void print() {
         LOG("======MyMsg========");
