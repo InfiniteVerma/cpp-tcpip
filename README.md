@@ -42,11 +42,17 @@ Continuously iterating on it since there's so much going on here :)
     - [?] Full state machine
     - [x] Do 3 way handshake and maintain the state (of FSM) properly
 - [x] Close socket and free resources
+- [ ] Send and receive data
+    - [ ] Insert packet in a buffer and use a bitset with mutex
+    - [ ] Retrieve packet in tcp thread
+    - [ ] Add tcp/ip headers and send to socket
+    - [ ] After ESTABLISHED, server needs to listen for data
+    - [ ] For now, get the packet and dump it
+- [ ] Sequence and ACK logic
 - [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
-- [ ] Send data after handshake and then close socket
 - [ ] Retransmission queue
     - [ ] Test 3 way handshake with this
-- [ ] Sequence window logic
+- [ ] Add properly error codes
 - [ ] getISN from time module 2**32
 
 End goal: Sending a file as a byte stream over this tcp/ip implementation

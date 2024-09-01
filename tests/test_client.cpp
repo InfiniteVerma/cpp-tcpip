@@ -3,10 +3,8 @@
 
 #include <cerrno>
 #include <cstring>
-#include <iostream>
 
 #include "mytcp.h"
-// #include "socket.h"
 #include "user_socket.h"
 
 #define PORT 9000
@@ -18,22 +16,7 @@
 
 void client() {
     LOG("Hello from client thread");
-#if 0
-    Socket socket("Client", "192.168.1.2", PORT);
-    socket.setDestIp("192.168.1.1");
 
-    int ret = socket.connect();
-
-    socket.debugPrint();
-
-    if (ret != 0) {
-        // TODO formalize error coding
-        LOG("3 way handshake failed");
-        socket.close();
-        return;
-    }
-
-#endif
     string name = "Client";
     string srcIp = "192.168.1.2";
     string destIp = "192.168.1.1";
@@ -46,13 +29,14 @@ void client() {
 
     LOG("connect ret: ", ret);
 
+    const char* message = "Hello, world";
+
+    ret = UserSocket::send(fd, message, strlen(message), 0);
+    LOG("send ret: ", ret);
+
     ret = UserSocket::close(fd);
 
     LOG("close ret: ", ret);
-
-    // const char *message = "CLOSE";
-    // socket.send(message, strlen(message), 0);
-    // socket.close();
 }
 
 int main() {

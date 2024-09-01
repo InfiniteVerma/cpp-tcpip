@@ -17,6 +17,7 @@ class UserSocket {
     static int listen(UINT8 fd);
     static int connect(UINT8 fd);
     static int close(UINT8 fd);
+    static int send(UINT8 fd, const void* buffer, size_t length, int flags);
 
     static int stopTCP();
 

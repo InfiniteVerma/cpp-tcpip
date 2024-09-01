@@ -28,10 +28,17 @@ bool MyTcp::isRetValAvailable = false;
 bool MyTcp::isStopped = false;
 int MyTcp::retVal = 0;
 
+// user data
+std::mutex MyTcp::userPacketMutex;
+char* MyTcp::userPacketData = nullptr;
+bitset<USER_PACKET_COUNT_IN_HEAP> MyTcp::userPacketBitset = {0};
+
 MyTcp::MyTcp() {
     // create the msgqueue
     msgQueueID = msgget(IPC_PRIVATE, IPC_CREAT | 0600);
     myThread = thread(startTCPThread);
+
+    userPacketData = new char[1024 * USER_PACKET_COUNT_IN_HEAP];
 
     // just for testing
     // Timer* timerInstance = Timer::getInstance();
@@ -39,7 +46,10 @@ MyTcp::MyTcp() {
     // timerInstance->addTimer(task);
 }
 
-MyTcp::~MyTcp() { LOG("Destructor called!"); }
+MyTcp::~MyTcp() {
+    LOG("Destructor called!");
+    delete[] userPacketData;
+}
 
 void MyTcp::createMyTCP(string mainThreadName) {
     Utils::addThreadInfo(mainThreadName);
@@ -184,6 +194,18 @@ void MyTcp::reactToUserCalls() {
             stopTCPThread();
             LOG(__FUNCTION__, " STOP_TCP_THREAD call reached kernel!");
         } break;
+        case SEND_PACKET: {
+            LOG(__FUNCTION__, " SEND_PACKET called hit slot: ", myMsg.slotIndex, " size: ", myMsg.packetSize);
+            lock_guard<mutex> lg(userPacketMutex);
+            char* startPtr = userPacketData + myMsg.slotIndex * 1024;
+            char* buffer = new char[1024];
+            memcpy(buffer, startPtr, myMsg.packetSize);
+            Utils::hexDump(buffer, myMsg.packetSize);
+            userPacketBitset.reset(myMsg.slotIndex);
+
+            // TODO send the packet to server
+            break;
+        }
         default:
             assert(0);
     }
@@ -267,3 +289,21 @@ int MyTcp::getRetval() {
 }
 
 void MyTcp::waitForThreadToDie() { myThread.join(); }
+
+int MyTcp::insertPacketInSendBuffer(const void* buffer, int size) {
+    LOG(__FUNCTION__, " BEGIN");
+    lock_guard<mutex> lg(userPacketMutex);
+    int slot = -1;
+    for (int i = 0; i < USER_PACKET_COUNT_IN_HEAP; i++) {
+        if (!userPacketBitset[i]) {
+            LOG(__FUNCTION__, " found free slot at index: ", i);
+            userPacketBitset.set(i);
+            char* startPtr = userPacketData + i * 1024;
+            memcpy(startPtr, buffer, size);
+            slot = i;
+            break;
+        }
+    }
+
+    return slot;
+}

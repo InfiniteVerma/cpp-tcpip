@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <mutex>
 
 #include "messages.h"
 #include "mytcp.h"
@@ -73,9 +74,7 @@ int UserSocket::connect(UINT8 fd) {
 
     if (ret == -1) {
         LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
-    }
-
-    if (ret != -1) {
+    } else {
         ret = MyTcp::getRetval();
     }
     return ret;
@@ -87,12 +86,35 @@ int UserSocket::close(UINT8 fd) {
 
     if (ret == -1) {
         LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
-    }
-
-    if (ret != -1) {
+    } else {
         ret = MyTcp::getRetval();
     }
 
+    return ret;
+}
+
+int UserSocket::send(UINT8 fd, const void *buffer, size_t size, int flags) {
+    LOG(__FUNCTION__, " sending data to socket. TODO flags are ignored");
+    int ret = MyTcp::insertPacketInSendBuffer(buffer, size);
+
+    if (ret == -1) {
+        LOG(__FUNCTION__, " ERROR no space available!");
+        assert(0);
+    }
+
+    MyMsg msg(SEND_PACKET, fd);
+    msg.slotIndex = ret;
+    msg.packetSize = size;
+
+    ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
+
+    if (ret == -1) {
+        LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
+    } else {
+        // ret = MyTcp::getRetval();
+    }
+
+    LOG(__FUNCTION__, " packet inserted in buffer and message sent!");
     return ret;
 }
 

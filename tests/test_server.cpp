@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include <iostream>
 
 #include "mytcp.h"
 #include "user_socket.h"
@@ -20,16 +19,7 @@ using namespace std;
 
 void server() {
     LOG("Hello from server thread\n");
-#if 0
-    Socket socket("Server", "192.168.1.1", PORT);
 
-    socket.setDestIp("192.168.1.2");
-    socket.bind();
-    socket.listen();
-
-    socket.debugPrint();
-
-#endif
     string name = "Server";
     string srcIp = "192.168.1.1";
     string destIp = "192.168.1.2";

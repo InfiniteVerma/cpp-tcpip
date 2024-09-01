@@ -1,10 +1,13 @@
 #ifndef __RFC793_MYTCP__
 #define __RFC793_MYTCP__
 
+#include <bitset>
 #include <condition_variable>
 #include <thread>
 
 #include "socket.h"
+
+#define USER_PACKET_COUNT_IN_HEAP 4
 
 class MyTcp {
    public:
@@ -16,6 +19,7 @@ class MyTcp {
     static void setRetVal(int);
 
     static void waitForThreadToDie();
+    static int insertPacketInSendBuffer(const void* buffer, int size);
 
    private:
     MyTcp();
@@ -46,6 +50,13 @@ class MyTcp {
     static bool isFDBusy;
     static bool isRetValAvailable;
     static int retVal;
+
+    /*
+     * User data
+     */
+    static char* userPacketData;
+    static bitset<USER_PACKET_COUNT_IN_HEAP> userPacketBitset;
+    static std::mutex userPacketMutex;
 };
 
 #endif

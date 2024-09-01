@@ -12,6 +12,7 @@ enum MessageTypes {
     LISTEN_SOCKET,
     CONNECT_SOCKET,
     STOP_TCP_THREAD,
+    SEND_PACKET,
     ERROR,
 };
 
@@ -22,6 +23,8 @@ struct MyMsg {
     char sourceIpAddr[16];
     char destIpAddr[16];
     UINT16 port;
+    UINT8 slotIndex;
+    UINT16 packetSize;
 
     MyMsg(MessageTypes mtype, int fd) {
         this->mtype = mtype;
@@ -58,12 +61,23 @@ struct MyMsg {
     void print() {
         LOG("======MyMsg========");
         LOG("mtype: ", (MessageTypes)mtype);
-        LOG("socketName: ", socketName);
-        LOG("sourceIpAddr: ", sourceIpAddr);
-        LOG("destIpAddr: ", destIpAddr);
-        LOG("port: ", port);
-        LOG("fd: ", static_cast<int>(fd));
+
+        switch (mtype) {
+            case SEND_PACKET: {
+                LOG("fd: ", static_cast<int>(fd));
+                LOG("slotindex: ", slotIndex);
+                LOG("packet size: ", packetSize);
+                break;
+            }
+            default: {
+                LOG("socketName: ", socketName);
+                LOG("sourceIpAddr: ", sourceIpAddr);
+                LOG("destIpAddr: ", destIpAddr);
+                LOG("port: ", port);
+                LOG("fd: ", static_cast<int>(fd));
+                break;
+            }
+        }
     }
 };
-
 #endif
