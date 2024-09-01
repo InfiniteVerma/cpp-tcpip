@@ -35,13 +35,15 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Implement timer logic
     - [x] Stop the kernel thread gracefully
     - [x] Verify the handshake that worked before
-    - [ ] Stop threads once handshake is done for now
+    - [x] Stop threads once handshake is done for now
 - [ ] Proper handshake
+    - [ ] Understand all the snd_nxt etc uses and use it in timer logic
     - [ ] Full state machine
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
+- [ ] Close socket and free resources
+- [ ] Send data after handshake and then close socket
 - [ ] Retransmission queue
     - [ ] Test 3 way handshake with this
-- [ ] Try sending a packet after connection is established
 - [ ] Sequence window logic
 - [ ] getISN from time module 2**32
 
