@@ -13,6 +13,7 @@ struct PktData {
     const char *destIp;
 
     PktData(int localP, int remoteP, int ackNo, int seqNo, const char *sourceIp, const char *destIp) {
+        LOG("PktData constructor called, ackNo: ", ackNo, " seqNo: ", seqNo);
         localPortNum = localP;
         remotePortNum = remoteP;
         ackNumber = ackNo;
@@ -28,6 +29,7 @@ struct PktData {
 class Packet {
    public:
     Packet(int sourcePort, int destPort);
+    Packet();
     Packet(char *rawPacket, int size);
     ~Packet();
 
@@ -43,7 +45,7 @@ class Packet {
     bool isSYNSet();
 
     // allowed modifiers
-    void setSequenceNumber(int);
+    void setSeq(int);
     void setAckNumber(int);
     void setTCPFlags(int);
 

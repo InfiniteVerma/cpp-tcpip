@@ -217,7 +217,7 @@ void MyTcp::recvSegment() {  // TODO pg65
     } else if (!action) {
         LOG(__FUNCTION__, " action is NULL, assuming FSM wants us to discard the packet");
     } else {
-        mySocket->executeNextAction(action);
+        mySocket->executeNextAction(action, buffer, size);
         LOG(__FUNCTION__, " executed next action");
     }
 

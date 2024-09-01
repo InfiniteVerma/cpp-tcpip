@@ -2,44 +2,38 @@
 
 #include <arpa/inet.h>
 
+#include <cassert>
 #include <cstring>
 
 #include "ip.h"
+
+Packet::Packet() : tcpHeader(0, 0), size(0) {}
 
 Packet::Packet(int sourcePort, int destPort) : tcpHeader(sourcePort, destPort), size(0) {}
 
 Packet::~Packet() {}
 
 Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
-    LOG("Packet constructor, parsing the pkt");
     memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
     memcpy(&tcpHeader, rawPacket + sizeof(IPHeader), sizeof(TCPHeader));
-
-    LOG("flags set: ", tcpHeader.data_offset_and_flags);
-    LOG("sequence no: ", tcpHeader.seq_number);
 }
 
 const char *Packet::makePacket() {
-    LOG(__FUNCTION__, " BEGIN");
+    // LOG(__FUNCTION__, " BEGIN");
     char *payload = new char[65535];
 
     ipHeader.checksum = getChecksumVal(&ipHeader);
 
     memcpy(payload, &ipHeader, sizeof(IPHeader));
-    LOG(__FUNCTION__, " copied ip header of size: ", sizeof(IPHeader));
-
     char *ptr = payload + sizeof(IPHeader);
+
     memcpy(ptr, &tcpHeader, sizeof(TCPHeader));
-    LOG(__FUNCTION__, " copied tcp header of size: ", sizeof(tcpHeader));
 
     size = sizeof(IPHeader) + sizeof(TCPHeader);
-
-    LOG(__FUNCTION__, " Sending packet of total size: ", size);
-
     return payload;
 }
 
-void Packet::setSequenceNumber(int seq) { tcpHeader.seq_number = seq; }
+void Packet::setSeq(int seq) { tcpHeader.seq_number = seq; }
 
 void Packet::setAckNumber(int ack) { tcpHeader.ack_number = ack; }
 
@@ -55,7 +49,7 @@ Packet Packet::getSYNPacket(PktData pktData) {
     LOG(__FUNCTION__, " BEGIN");
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
-    packet.setSequenceNumber(pktData.seqNumber);
+    packet.setSeq(pktData.seqNumber);
     packet.setTCPFlags((1 << 1));
 
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
@@ -69,7 +63,7 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
     // set sequence number
-    packet.setSequenceNumber(20);
+    packet.setSeq(pktData.seqNumber);
 
     // set ack bit and pass seq number given by SYN in ack field
     packet.setAckNumber(pktData.ackNumber);
@@ -77,7 +71,6 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     packet.setTCPFlags((1 << 1) | (1 << 4));  // set SYN and ACK
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
-
     return packet;
 }
 
@@ -102,6 +95,7 @@ Packet Packet::getAckPacket(PktData pktData) {
 
     packet.setTCPFlags((1 << 4));  // ACK
     packet.setAckNumber(pktData.ackNumber);
+    packet.setSeq(pktData.seqNumber);
 
     return packet;
 }
@@ -113,7 +107,7 @@ Packet Packet::getRSTPacket(PktData pktData) {
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
 
-    packet.setSequenceNumber(pktData.ackNumber);
+    packet.setSeq(pktData.ackNumber);
     packet.setTCPFlags((1 << 1) | (1 << 2));
 
     return packet;

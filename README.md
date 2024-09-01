@@ -38,10 +38,11 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Stop threads once handshake is done for now
 - [ ] Proper handshake
     - [ ] Fix timer. Timeout should fail and after receiving ACK, delete timer
-    - [ ] Implement it as designed in the "Event Processing" chapter in RFC
-    - [ ] Full state machine
-    - [ ] Do 3 way handshake and maintain the state (of FSM) properly
+    - [x] Implement it as designed in the "Event Processing" chapter in RFC
+    - [?] Full state machine
+    - [x] Do 3 way handshake and maintain the state (of FSM) properly
 - [ ] Close socket and free resources
+- [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
 - [ ] Send data after handshake and then close socket
 - [ ] Retransmission queue
     - [ ] Test 3 way handshake with this

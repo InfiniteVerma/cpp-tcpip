@@ -2,6 +2,7 @@
 
 #include <sched.h>
 
+#include <cassert>
 #include <ctime>
 #include <iomanip>
 
@@ -54,7 +55,14 @@ Timer* Timer::getInstance() {
     return myTimerInstance;
 }
 
-void Timer::addTimer(UINT32 seqNumber, ScheduledTask* task) { scheduledTasks.insert({seqNumber, task}); }
+void Timer::addTimer(UINT32 seqNumber, ScheduledTask* task) {
+    LOG(__FUNCTION__, " called for seq: ", seqNumber);
+    if (scheduledTasks.find(seqNumber) != scheduledTasks.end()) {
+        assert(0);
+    }
+    scheduledTasks.insert({seqNumber, task});
+    LOG(__FUNCTION__, " now timers active: ", scheduledTasks.size());
+}
 
 void Timer::delTimer(UINT32 seqNumber) {
     LOG(__FUNCTION__, " called for seq: ", seqNumber);
@@ -72,7 +80,7 @@ void Timer::delTimer(UINT32 seqNumber) {
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
 
 void Timer::runTimeouts() {
-    // LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
+    LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
     for (auto data : scheduledTasks) {
         if (data.second->hasElapsed()) {
             LOG(__FUNCTION__, "seq number: ", data.first, " has elapsed. Calling timeout");

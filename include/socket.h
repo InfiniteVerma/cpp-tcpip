@@ -26,7 +26,7 @@ class Socket {
     void close();
     int accept();
     ACTION updateState(char *buf, int size);
-    void executeNextAction(ACTION action);
+    void executeNextAction(ACTION action, char *buf, int size);
     ConnectionState getCurrentState();
     UINT32 getLastTransmittedSeqNumber();
 

@@ -180,7 +180,7 @@ int Socket::threeWayHandshakeClient() {
     tcb.snd_una = tcb.iss;
     tcb.snd_nxt = tcb.iss + 1;
 
-    LOG("Sending 1st SYN seq:", tcb.snd_nxt - 1);
+    LOG("Sending 1st SYN seq:", tcb.iss);
     sendPacket(pkt);
     LOG("1st SYN sent");
 
@@ -465,13 +465,40 @@ ACTION Socket::updateState(char *buf, int size) {
     return tcb.updateState(buf, size);
 }
 
-void Socket::executeNextAction(ACTION action) {
+void Socket::executeNextAction(ACTION action, char *buffer, int size) {
     LOG(__FUNCTION__, " BEGIN");
     if (!action) {
         LOG(__FUNCTION__, " action is NULL, current statue: ", tcb.getState(), " returning!");
     } else {
-        Packet pkt = action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
-        sendPacket(pkt);
+        // mutate stuff
+        Packet p = Packet(buffer, size);
+        Packet nextPkt;
+        switch (tcb.getState()) {
+            case SYN_RECEIVED:
+                LOG(__FUNCTION__, " I switched from LISTEN TO SYN_RECEIVED");
+                tcb.rcv_nxt = p.getSeq() + 1;
+                tcb.irs = p.getSeq();  // TODO delete irs func
+                                       //           <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
+                nextPkt = action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.iss, sourceIp, destIp));
+                break;
+            case ESTABLISHED:
+                LOG(__FUNCTION__, " I switched from SYN_SENT TO ESTABLISHED");
+                tcb.rcv_nxt = p.getSeq() + 1;
+                tcb.irs = p.getSeq();
+                tcb.snd_una = p.getAck();
+                //                          <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+                nextPkt =
+                    action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.snd_nxt, sourceIp, destIp));
+                break;
+            default:
+                // TODO handle
+                assert(0);
+                break;
+        }
+
+        tcb.snd_nxt = tcb.iss + 1;
+        tcb.snd_una = tcb.iss;
+        sendPacket(nextPkt);
     }
 }
 
