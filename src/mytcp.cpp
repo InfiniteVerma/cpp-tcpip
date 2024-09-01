@@ -204,8 +204,24 @@ void MyTcp::recvSegment() {  // TODO pg65
 
     if (ret <= 0) return;  // no pkt received
 
-    Packet pkt = Packet(buffer, size);  // TODO better way?
+    LOG(__FUNCTION__, " get a packet! Hexdump:");
+    Utils::hexDump(buffer, size);
 
+    /*
+     * Packet received from the socket. Send it to the FSM.
+     */
+    ACTION action = mySocket->updateState(buffer, size);
+    if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
+        LOG(__FUNCTION__, " ESTABLISHED!");
+        MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
+    } else if (!action) {
+        LOG(__FUNCTION__, " action is NULL, assuming FSM wants us to discard the packet");
+    } else {
+        mySocket->executeNextAction(action);
+        LOG(__FUNCTION__, " executed next action");
+    }
+
+#if 0
     if (mySocket->getCurrentState() == LISTEN) {
         LOG(__FUNCTION__, " get a packet! Hexdump:");
         Utils::hexDump(buffer, size);
@@ -240,6 +256,7 @@ void MyTcp::recvSegment() {  // TODO pg65
             assert(0);
         }
     }
+#endif
 
     LOG(__FUNCTION__, " After processing a packet!");
     mySocket->debugPrint();

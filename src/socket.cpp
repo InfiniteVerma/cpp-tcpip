@@ -169,7 +169,7 @@ UINT32 Socket::getLastTransmittedSeqNumber()  // TODO a better way?
 int Socket::threeWayHandshakeClient() {
     // LOG(__FUNCTION__, " BEGIN\n");
 
-    tcb.updateState(CLOSED);  // To update FSM
+    tcb.updateState(OPEN);  // To update FSM
 
     ACTION firstAction = tcb.updateState(NULL, 0);
 
@@ -240,6 +240,7 @@ void Socket::sendPacket(Packet pkt) {
 
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress, sizeof(destAddress));
 
+    LOG(__FUNCTION__, "sending below packet");
     Utils::hexDump(payload, size);
 
     Timer *timerInstance = Timer::getInstance();
@@ -250,7 +251,6 @@ void Socket::sendPacket(Packet pkt) {
     });
 
     timerInstance->addTimer(pkt.getSeq(), task);
-    LOG(__FUNCTION__, " added timer for pkt seq: ", pkt.getSeq());
 
     LOG(__FUNCTION__, "sendto done");
 }

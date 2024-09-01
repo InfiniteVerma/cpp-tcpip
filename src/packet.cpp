@@ -27,7 +27,6 @@ const char *Packet::makePacket() {
 
     memcpy(payload, &ipHeader, sizeof(IPHeader));
     LOG(__FUNCTION__, " copied ip header of size: ", sizeof(IPHeader));
-    Utils::hexDump(payload, sizeof(IPHeader));
 
     char *ptr = payload + sizeof(IPHeader);
     memcpy(ptr, &tcpHeader, sizeof(TCPHeader));
@@ -36,7 +35,6 @@ const char *Packet::makePacket() {
     size = sizeof(IPHeader) + sizeof(TCPHeader);
 
     LOG(__FUNCTION__, " Sending packet of total size: ", size);
-    Utils::hexDump(payload, size);
 
     return payload;
 }
@@ -54,6 +52,7 @@ int Packet::getSeq() { return tcpHeader.seq_number; }
 int Packet::getAck() { return tcpHeader.ack_number; }
 
 Packet Packet::getSYNPacket(PktData pktData) {
+    LOG(__FUNCTION__, " BEGIN");
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
     packet.setSequenceNumber(pktData.seqNumber);
@@ -84,11 +83,11 @@ Packet Packet::getSynAckPacket(PktData pktData) {
 
 bool Packet::isSynPacket(Packet packet) { return packet.isSYNSet(); }
 
-bool Packet::isSynAckPacket(Packet packet) {
-    int flags = packet.tcpHeader.data_offset_and_flags;
+bool Packet::isSynAckPacket(Packet packet) { return packet.isSYNSet() && packet.isACKSet(); }
 
-    return (flags > 1) & (flags > 4);
-}
+bool Packet::isRstPacket(Packet packet) { return packet.isRSTSet(); }
+
+bool Packet::isNotRstPacket(Packet packet) { return !packet.isRSTSet(); }
 
 bool Packet::isAckPacket(Packet packet) {
     return packet.isACKSet();
@@ -125,3 +124,44 @@ bool Packet::isRSTSet() { return (tcpHeader.data_offset_and_flags & (1 << 2)); }
 bool Packet::isACKSet() { return (tcpHeader.data_offset_and_flags & (1 << 4)); }
 
 bool Packet::isSYNSet() { return (tcpHeader.data_offset_and_flags & (1 << 1)); }
+
+void Packet::printPacket() {
+    LOG(__FUNCTION__);
+    LOG("BEGIN size: ", size);
+
+    LOG("IP Header");
+    LOG("  idl: ", ipHeader.idl);
+    LOG("  version: ", ipHeader.version);
+    LOG("  type_of_service: ", ipHeader.type_of_service);
+    LOG("  total_length: ", ipHeader.total_length);
+    LOG("  identification: ", ipHeader.identification);
+    LOG("  fragment_offset: ", ipHeader.fragment_offset);
+    LOG("  ttl: ", ipHeader.ttl);
+    LOG("  protocol: ", ipHeader.protocol);
+    LOG("  checksum: ", ipHeader.checksum);
+    LOG("  source_addr: ", ipHeader.source_addr);
+    LOG("  dest_addr: ", ipHeader.dest_addr);
+
+    LOG("TCP Header");
+    LOG("  source_port: ", tcpHeader.source_port);
+    LOG("  dest_port: ", tcpHeader.dest_port);
+    LOG("  seq_number: ", tcpHeader.seq_number);
+    LOG("  ack_number: ", tcpHeader.ack_number);
+    prettyPrintFlags();
+    LOG("  window: ", tcpHeader.window);
+    LOG("  checksum: ", tcpHeader.checksum);
+    LOG("  urgent_pointer: ", tcpHeader.urgent_pointer);
+    LOG(__FUNCTION__, " END");
+}
+
+void Packet::prettyPrintFlags() {
+    string res = "";
+
+    if (isACKSet()) res += "ACK, ";
+
+    if (isSYNSet()) res += "SYN, ";
+
+    if (isRSTSet()) res += "RST, ";
+
+    LOG("  data_offset_and_flags: ", res);
+}

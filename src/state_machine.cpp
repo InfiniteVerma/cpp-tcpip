@@ -14,23 +14,41 @@ ACTION TCBStateM::updateState(char *pkt, int size) {
 
     if (!pkt && state == CLOSED)  // TODO better way?
     {
+        assert(0);
+        // TODO remove
         state = SYN_SENT;
         return FSM[0].action;
     }
-    // Parse packet
-    Packet parsedPacket = Packet(pkt, size);
 
-    // iterate through FSM, find matching current state. If not match?
+    if (pkt) {
+        LOG(__FUNCTION__, " Packet pushing to FSM:");
+        Packet p = Packet(pkt, size);
+        p.printPacket();
+    }
+
+    // iterate through FSM, find matching current state.
     for (auto itr : FSM) {
         if (itr.currentState == state) {
             LOG("Found matching state: ", state);
+            if (!itr.checker) {
+                LOG("Checker is NULL! Updating state");
+                state = itr.nextState;
+                return itr.action;
+            }
+
+            assert(pkt);
+            Packet parsedPacket = Packet(pkt, size);
+
             if (itr.checker(parsedPacket)) {
                 LOG("Checker passed! Updating state");
                 state = itr.nextState;
                 return itr.action;
+            } else {
+                continue;
             }
         }
     }
+
     LOG("Could not find a valid ACTION, returning NULL\n");
     assert(0);
     return NULL;
@@ -42,6 +60,9 @@ std::ostream &operator<<(std::ostream &os, const ConnectionState &state) {
     switch (state) {
         case LISTEN:
             os << "LISTEN";
+            break;
+        case OPEN:
+            os << "OPEN";
             break;
         case SYN_SENT:
             os << "SYN_SENT";

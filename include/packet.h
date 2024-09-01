@@ -32,6 +32,9 @@ class Packet {
     ~Packet();
 
     const char *makePacket();
+    void printPacket();
+    void prettyPrintFlags();
+
     int getSize();
     int getSeq();
     int getAck();
@@ -48,6 +51,8 @@ class Packet {
     static bool isSynPacket(Packet);
     static bool isSynAckPacket(Packet);
     static bool isAckPacket(Packet);
+    static bool isRstPacket(Packet);
+    static bool isNotRstPacket(Packet);
 
     // Actions
     static Packet getSYNPacket(PktData pktData);

@@ -7,6 +7,7 @@
 #include "packet.h"
 enum ConnectionState {
     LISTEN = 0,
+    OPEN,
     SYN_SENT,
     SYN_RECEIVED,
     ESTABLISHED,
@@ -36,19 +37,26 @@ struct StateMData {
     }
 };
 
-// A connection progresses through a series of states during its
-//  lifetime.  The states are:  LISTEN, SYN-SENT, SYN-RECEIVED,
-//  ESTABLISHED, FIN-WAIT-1, FIN-WAIT-2, CLOSE-WAIT, CLOSING, LAST-ACK,
-//  TIME-WAIT, and the fictional state CLOSED.  CLOSED is fictional
-//  because it represents the state when there is no TCB, and therefore,
-//  no connection.  Briefly the meanings of the states are:
+/*
+ * If checker is NULL, it's always true (default case when no checks are needed)
+ * If action is NULL, that means no action == discard that packet
+ */
 
 // clang-format off
 const vector<StateMData> FSM = {
-    StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
-    StateMData(LISTEN, Packet::isSynPacket, Packet::getSynAckPacket, SYN_RECEIVED),
+    StateMData(CLOSED, Packet::isRstPacket, NULL, CLOSED),
+    StateMData(CLOSED, Packet::isNotRstPacket, Packet::getRSTPacket, CLOSED),
+
+    StateMData(OPEN, NULL, Packet::getSYNPacket, SYN_SENT),
+
+    StateMData(LISTEN, Packet::isRstPacket, NULL, LISTEN),
     StateMData(LISTEN, Packet::isAckPacket, Packet::getRSTPacket, LISTEN),
+    StateMData(LISTEN, Packet::isSynPacket, Packet::getSynAckPacket, SYN_RECEIVED),
+    StateMData(LISTEN, NULL, NULL, LISTEN),
+
     StateMData(SYN_SENT, Packet::isSynAckPacket, Packet::getAckPacket, ESTABLISHED),
+    StateMData(SYN_SENT, Packet::isRstPacket, NULL, CLOSED), // TODO how to release resources??
+
     StateMData(SYN_RECEIVED, Packet::isAckPacket, NULL, ESTABLISHED)
 };
 // clang-format on
