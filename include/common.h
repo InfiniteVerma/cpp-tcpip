@@ -23,7 +23,7 @@ const std::string WHITE = "\033[37m";
 
 class Utils {
    public:
-    static void hexDump(char* data, int size) {
+    static void hexDump(const char* data, int size) {
         cout << " =======\nHEX DUMP \n";
         const int bytesPerLine = 16;  // Number of bytes per line in the dump
         for (int i = 0; i < size; i += bytesPerLine) {

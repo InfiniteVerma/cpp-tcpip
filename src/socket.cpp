@@ -62,8 +62,14 @@ Socket::Socket(std::string desc, const char *ip, int port) {
     this->desc = desc;
     socketFd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 
-    this->sourceIp = ip;
+    /*
+     * Allocating memory and copying it before oringal pointer mutates corrupting source/dest ip
+     */
+    this->sourceIp = new char[strlen(ip) + 1];
+    strcpy(sourceIp, ip);
     tcb.localPortNum = port;
+
+    debugPrint();
 
     if (socketFd == -1) {
         printf(
@@ -72,16 +78,29 @@ Socket::Socket(std::string desc, const char *ip, int port) {
             desc.c_str(), errno, strerror(errno));
         assert(0);
     }
-
     // socketFd = socket(AF_INET, SOCK_STREAM, 0);
 }
 
-void Socket::setDestIp(const char *destIp) { this->destIp = destIp; }
+Socket::~Socket() {
+    delete[] sourceIp;
+    delete[] destIp;
+}
+
+void Socket::setDestIp(const char *ip) {
+    /*
+     * Allocating memory and copying it before oringal pointer mutates corrupting source/dest ip
+     */
+    this->destIp = new char[strlen(ip) + 1];
+    strcpy(destIp, ip);
+}
 
 void Socket::bind() {
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_addr.s_addr = inet_addr(sourceIp);
+
+    LOG(__FUNCTION__);
+    debugPrint();
 
     int ret = ::bind(socketFd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
 
@@ -113,6 +132,9 @@ int Socket::connect() {
     clientAddress.sin_family = AF_INET;
     clientAddress.sin_addr.s_addr = inet_addr(sourceIp);
 
+    LOG(__FUNCTION__);
+    debugPrint();
+
     if (::bind(socketFd, (struct sockaddr *)&clientAddress, sizeof(clientAddress)) < 0) {
         perror("Socket bind failed");
         ::close(socketFd);
@@ -141,6 +163,8 @@ int Socket::threeWayHandshakeClient() {
     tcb.updateState(CLOSED);  // To update FSM
 
     ACTION firstAction = tcb.updateState(NULL, 0);
+
+    LOG(__FUNCTION__, "Making packet with source IP: ", this->sourceIp, " dest IP: ", this->destIp);
 
     Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
 
@@ -206,6 +230,8 @@ void Socket::sendPacket(Packet pkt) {
     destAddress.sin_addr.s_addr = inet_addr(sourceIp);
 
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress, sizeof(destAddress));
+
+    Utils::hexDump(payload, size);
 
     LOG(__FUNCTION__, "sendto done");
 }
@@ -408,10 +434,10 @@ void Socket::freeEphemeralPortNum(int portNum) {
 }
 
 void Socket::debugPrint() {
-    LOG("==============\nSocket debugPrint\n");
-    LOG("Port: ", tcb.localPortNum, "\n");
-    LOG("Source IP: ", sourceIp, "\n");
-    LOG("Dest IP: ", destIp, "\n");
+    LOG("==============\nSocket debugPrint");
+    LOG("Port: ", tcb.localPortNum);
+    LOG("Source IP: ", sourceIp);
+    LOG("Dest IP: ", destIp);
     tcb.debugPrint();
 }
 

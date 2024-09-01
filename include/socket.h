@@ -12,6 +12,7 @@
 class Socket {
    public:
     Socket(std::string s, const char *ip, int port);
+    ~Socket();
 
     void setDestIp(const char *ip);
     void debugPrint();
@@ -37,8 +38,8 @@ class Socket {
     int socketFd;
     TCB tcb;
     std::string desc;
-    const char *sourceIp;
-    const char *destIp;
+    char *sourceIp;
+    char *destIp;
 
     void sendPacket(Packet pkt);
 

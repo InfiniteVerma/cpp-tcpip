@@ -48,9 +48,9 @@ struct IPHeader {
         fragment_offset = 0;
         ttl = 64;
         protocol = IPPROTO_RAW;
-        checksum = 0;  // Will be updated later
-        source_addr = inet_addr("127.0.0.1");
-        dest_addr = inet_addr("127.0.0.1");  // TODO ?
+        checksum = 0;     // Will be updated later
+        source_addr = 0;  // inet_addr("127.0.0.1");
+        dest_addr = 0;    // inet_addr("127.0.0.1");  // TODO ?
     }
 };
 

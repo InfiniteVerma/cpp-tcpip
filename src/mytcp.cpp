@@ -209,7 +209,7 @@ void MyTcp::recvPackets() {
             LOG(__FUNCTION__, " no packet, returning");
         }
     } else {
-        LOG(__FUNCTION__, " socket not in listen stage!");
+        // LOG(__FUNCTION__, " socket not in listen stage!");
     }
 }
 

@@ -4,31 +4,37 @@
 
 #include <cstring>
 
+#include "ip.h"
+
 Packet::Packet(int sourcePort, int destPort) : tcpHeader(sourcePort, destPort), size(0) {}
 
 Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
-    cout << "Packet constructor, parsing the pkt\n";
+    LOG("Packet constructor, parsing the pkt\n");
     memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
     memcpy(&tcpHeader, rawPacket + sizeof(IPHeader), sizeof(TCPHeader));
-    cout << "Memcpy done\n";
+    LOG("Memcpy done\n");
 
-    cout << "flags set: " << tcpHeader.data_offset_and_flags << "\n";
-    cout << "sequence no: " << tcpHeader.seq_number << "\n";
+    LOG("flags set: ", tcpHeader.data_offset_and_flags, "\n");
+    LOG("sequence no: ", tcpHeader.seq_number, "\n");
 }
 
 const char *Packet::makePacket() {
+    LOG(__FUNCTION__, " BEGIN");
     char *payload = new char[65535];
 
     ipHeader.checksum = getChecksumVal(&ipHeader);
 
     memcpy(payload, &ipHeader, sizeof(IPHeader));
+    LOG(__FUNCTION__, " copied ip header of size: ", sizeof(IPHeader));
+    Utils::hexDump(payload, sizeof(IPHeader));
 
     char *ptr = payload + sizeof(IPHeader);
     memcpy(ptr, &tcpHeader, sizeof(TCPHeader));
+    LOG(__FUNCTION__, " copied tcp header of size: ", sizeof(tcpHeader));
 
     size = sizeof(IPHeader) + sizeof(TCPHeader);
 
-    cout << "Sending packet of size: " << size << "\n";
+    LOG(__FUNCTION__, " Sending packet of total size: ", size);
     Utils::hexDump(payload, size);
 
     return payload;
@@ -57,7 +63,7 @@ Packet Packet::getSYNPacket(PktData pktData) {
 }
 
 Packet Packet::getSynAckPacket(PktData pktData) {
-    cout << __FUNCTION__ << " BEGIN\n";
+    LOG(__FUNCTION__, " BEGIN\n");
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
     // set sequence number
@@ -70,8 +76,8 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
 
-    cout << "Sending packet with source ip: " << pktData.sourceIp << "\n";
-    cout << "Sending packet with dest ip: " << pktData.destIp << "\n";
+    LOG("Sending packet with source ip: ", pktData.sourceIp, "\n");
+    LOG("Sending packet with dest ip: ", pktData.destIp, "\n");
 
     return packet;
 }
@@ -87,13 +93,13 @@ bool Packet::isSynAckPacket(Packet packet) {
 bool Packet::isAckPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 4); }
 
 Packet Packet::getAckPacket(PktData pktData) {
-    cout << __FUNCTION__ << " BEGIN\n";
+    LOG(__FUNCTION__, " BEGIN\n");
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
-    cout << "Sending packet with source ip: " << pktData.sourceIp << "\n";
-    cout << "Sending packet with dest ip: " << pktData.destIp << "\n";
+    LOG("Sending packet with source ip: ", pktData.sourceIp, "\n");
+    LOG("Sending packet with dest ip: ", pktData.destIp, "\n");
 
     packet.setTCPFlags((1 << 4));  // ACK
     packet.setAckNumber(pktData.ackNumber);

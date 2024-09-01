@@ -78,7 +78,6 @@ int UserSocket::connect(UINT8 fd) {
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
-    LOG("======\nANANT Get ret value from getRetval: ", ret);
     return ret;
 }
 
