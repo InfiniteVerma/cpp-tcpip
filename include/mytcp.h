@@ -29,7 +29,7 @@ class MyTcp {
 
     static void reactToUserCalls();
     static void processTimeouts();
-    static void recvPackets();
+    static void recvSegment();
 
     static int getFreeFD();
 

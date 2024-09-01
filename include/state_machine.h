@@ -47,6 +47,7 @@ struct StateMData {
 const vector<StateMData> FSM = {
     StateMData(CLOSED, NULL, Packet::getSYNPacket, SYN_SENT),
     StateMData(LISTEN, Packet::isSynPacket, Packet::getSynAckPacket, SYN_RECEIVED),
+    StateMData(LISTEN, Packet::isAckPacket, Packet::getRSTPacket, LISTEN),
     StateMData(SYN_SENT, Packet::isSynAckPacket, Packet::getAckPacket, ESTABLISHED),
     StateMData(SYN_RECEIVED, Packet::isAckPacket, NULL, ESTABLISHED)
 };

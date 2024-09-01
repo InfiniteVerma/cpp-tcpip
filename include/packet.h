@@ -35,6 +35,9 @@ class Packet {
     int getSize();
     int getSeq();
     int getAck();
+    bool isACKSet();
+    bool isRSTSet();
+    bool isSYNSet();
 
     // allowed modifiers
     void setSequenceNumber(int);
@@ -50,6 +53,7 @@ class Packet {
     static Packet getSYNPacket(PktData pktData);
     static Packet getSynAckPacket(PktData pktData);
     static Packet getAckPacket(PktData pktData);
+    static Packet getRSTPacket(PktData pktData);
 
    private:
     IPHeader ipHeader;

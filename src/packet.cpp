@@ -8,6 +8,8 @@
 
 Packet::Packet(int sourcePort, int destPort) : tcpHeader(sourcePort, destPort), size(0) {}
 
+Packet::~Packet() {}
+
 Packet::Packet(char *rawPacket, int size) : tcpHeader(0, 0) {
     LOG("Packet constructor, parsing the pkt");
     memcpy(&ipHeader, rawPacket, sizeof(IPHeader));
@@ -77,13 +79,10 @@ Packet Packet::getSynAckPacket(PktData pktData) {
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
 
-    LOG("Sending packet with source ip: ", pktData.sourceIp);
-    LOG("Sending packet with dest ip: ", pktData.destIp);
-
     return packet;
 }
 
-bool Packet::isSynPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 1); }
+bool Packet::isSynPacket(Packet packet) { return packet.isSYNSet(); }
 
 bool Packet::isSynAckPacket(Packet packet) {
     int flags = packet.tcpHeader.data_offset_and_flags;
@@ -91,7 +90,9 @@ bool Packet::isSynAckPacket(Packet packet) {
     return (flags > 1) & (flags > 4);
 }
 
-bool Packet::isAckPacket(Packet packet) { return (packet.tcpHeader.data_offset_and_flags > 4); }
+bool Packet::isAckPacket(Packet packet) {
+    return packet.isACKSet();
+}  //{ return (packet.tcpHeader.data_offset_and_flags > 4); }
 
 Packet Packet::getAckPacket(PktData pktData) {
     LOG(__FUNCTION__, " BEGIN\n");
@@ -99,8 +100,6 @@ Packet Packet::getAckPacket(PktData pktData) {
 
     packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
     packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
-    LOG("Sending packet with source ip: ", pktData.sourceIp);
-    LOG("Sending packet with dest ip: ", pktData.destIp);
 
     packet.setTCPFlags((1 << 4));  // ACK
     packet.setAckNumber(pktData.ackNumber);
@@ -108,4 +107,21 @@ Packet Packet::getAckPacket(PktData pktData) {
     return packet;
 }
 
-Packet::~Packet() {}
+Packet Packet::getRSTPacket(PktData pktData) {
+    LOG(__FUNCTION__, " BEGIN\n");
+    Packet packet(pktData.localPortNum, pktData.remotePortNum);
+
+    packet.ipHeader.source_addr = inet_addr(pktData.sourceIp);
+    packet.ipHeader.dest_addr = inet_addr(pktData.destIp);
+
+    packet.setSequenceNumber(pktData.ackNumber);
+    packet.setTCPFlags((1 << 1) | (1 << 2));
+
+    return packet;
+}
+
+bool Packet::isRSTSet() { return (tcpHeader.data_offset_and_flags & (1 << 2)); }
+
+bool Packet::isACKSet() { return (tcpHeader.data_offset_and_flags & (1 << 4)); }
+
+bool Packet::isSYNSet() { return (tcpHeader.data_offset_and_flags & (1 << 1)); }

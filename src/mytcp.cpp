@@ -54,10 +54,10 @@ void MyTcp::startTCPThread() {
         /* 1. react to calls from client */
         reactToUserCalls();
         if (isStopped) break;
-        /* 2. Process timeouts */
+        /* 2. Recv pkt */
+        recvSegment();
+        /* 3. Process timeouts */
         processTimeouts();
-        /* 3. Recv pkt */
-        recvPackets();
     }
 }
 
@@ -154,13 +154,13 @@ void MyTcp::reactToUserCalls() {
                     myCV.notify_one();
                 } else {
                     // TODO add 5 seconds timer which if fails should return error code
-                    //Timer* timerInstance = Timer::getInstance();
-                    //ScheduledTask* task = new ScheduledTask(10.0, []() {
+                    // Timer* timerInstance = Timer::getInstance();
+                    // ScheduledTask* task = new ScheduledTask(10.0, []() {
                     //    LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
                     //    MyTcp::setRetVal(1);
                     //});
-                    //timerInstance->addTimer(socketData.second->getLastTransmittedSeqNumber(), task);
+                    // timerInstance->addTimer(socketData.second->getLastTransmittedSeqNumber(), task);
                     LOG(__FUNCTION__, " connect SYN call passed. Waiting for reply now!");
                 }
             }
@@ -188,7 +188,7 @@ void MyTcp::processTimeouts() {
     timerInstance->runTimeouts();
 }
 
-void MyTcp::recvPackets() {
+void MyTcp::recvSegment() {  // TODO pg65
     // LOG(__FUNCTION__, " BEGIN ");
 
     if (mySockets.empty()) return;
@@ -198,18 +198,24 @@ void MyTcp::recvPackets() {
 
     Socket* mySocket = mySocketData.second;
 
-    if (mySocket->shouldListen()) {
-        char* buffer = new char[65535];
-        int size = 0;
-        int ret = mySocket->receivePacketBlocking(buffer, size, 1);
-        if (ret > 0) {
-            LOG(__FUNCTION__, " get a packet! Hexdump:");
-            Utils::hexDump(buffer, size);
-            Packet pkt = Packet(buffer, size);  // TODO better way?
-            LOG(__FUNCTION__, " ack number: ", pkt.getAck());
+    char* buffer = new char[65535];
+    int size = 0;
+    int ret = mySocket->receivePacketBlocking(buffer, size, 1);
 
+    if (ret <= 0) return;  // no pkt received
+
+    Packet pkt = Packet(buffer, size);  // TODO better way?
+
+    if (mySocket->getCurrentState() == LISTEN) {
+        LOG(__FUNCTION__, " get a packet! Hexdump:");
+        Utils::hexDump(buffer, size);
+        LOG(__FUNCTION__, " ack number: ", pkt.getAck());
+
+        if (pkt.isRSTSet()) {
+            // discarded
+        } else if (pkt.isACKSet() || pkt.isSYNSet()) {
             Timer* timerInstance = Timer::getInstance();
-            timerInstance->delTimer(pkt.getAck());
+            timerInstance->delTimer(pkt.getAck());  // in case seq doesn't match this fails silently
 
             ACTION action = mySocket->updateState(buffer, size);
             if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
@@ -220,13 +226,25 @@ void MyTcp::recvPackets() {
                 LOG(__FUNCTION__, " executed next action");
             }
         } else {
-            // LOG(__FUNCTION__, " no packet, returning");
+            assert(0);
         }
-
-        delete[] buffer;
     } else {
-        // LOG(__FUNCTION__, " socket not in listen stage!");
+        LOG(__FUNCTION__, " socket not in listen stage and received a pkt!");
+        // An incoming segment containing RST is discarded
+        // An incoming segment not containing a RST causes a RST to be sent in response
+        if (pkt.isRSTSet()) {
+            LOG(__FUNCTION__, " rst packet, discarding");
+        } else {
+            LOG(__FUNCTION__, " not containing rst, replying with rst");
+            // TODO
+            assert(0);
+        }
     }
+
+    LOG(__FUNCTION__, " After processing a packet!");
+    mySocket->debugPrint();
+
+    delete[] buffer;
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }

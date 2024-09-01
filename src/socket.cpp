@@ -1,3 +1,5 @@
+#include "socket.h"
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -12,13 +14,12 @@
 #include <cstring>
 #include <ctime>
 
-#include "socket.h"
-#include "timer.h"
 #include "ip.h"
+#include "mytcp.h"
 #include "packet.h"
 #include "state_machine.h"
 #include "tcb.h"
-#include "mytcp.h"
+#include "timer.h"
 using namespace std;
 
 unsigned int getChecksumVal(void *ipHeader) {
@@ -174,9 +175,10 @@ int Socket::threeWayHandshakeClient() {
 
     // LOG(__FUNCTION__, "Making packet with source IP: ", this->sourceIp, " dest IP: ", this->destIp);
 
-    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.snd_nxt, 0, sourceIp, destIp));
+    Packet pkt = firstAction(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.iss, 0, sourceIp, destIp));
 
-    tcb.snd_nxt++;
+    tcb.snd_una = tcb.iss;
+    tcb.snd_nxt = tcb.iss + 1;
 
     LOG("Sending 1st SYN seq:", tcb.snd_nxt - 1);
     sendPacket(pkt);
@@ -240,12 +242,12 @@ void Socket::sendPacket(Packet pkt) {
 
     Utils::hexDump(payload, size);
 
-    Timer* timerInstance = Timer::getInstance();
-    ScheduledTask* task = new ScheduledTask(10.0, []() {
-            LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+    Timer *timerInstance = Timer::getInstance();
+    ScheduledTask *task = new ScheduledTask(10.0, []() {
+        LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
-            MyTcp::setRetVal(1);
-            });
+        MyTcp::setRetVal(1);
+    });
 
     timerInstance->addTimer(pkt.getSeq(), task);
     LOG(__FUNCTION__, " added timer for pkt seq: ", pkt.getSeq());
@@ -456,11 +458,6 @@ void Socket::debugPrint() {
     LOG("Source IP: ", sourceIp);
     LOG("Dest IP: ", destIp);
     tcb.debugPrint();
-}
-
-bool Socket::shouldListen() {
-    // LOG(__FUNCTION__ , " TODO fix this properly\n");
-    return (tcb.getState() != CLOSED);
 }
 
 ACTION Socket::updateState(char *buf, int size) {

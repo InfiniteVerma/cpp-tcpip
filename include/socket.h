@@ -25,7 +25,6 @@ class Socket {
     void send(const char *message, size_t len, int flags);
     void close();
     int accept();
-    bool shouldListen();
     ACTION updateState(char *buf, int size);
     void executeNextAction(ACTION action);
     ConnectionState getCurrentState();

@@ -72,7 +72,7 @@ void Timer::delTimer(UINT32 seqNumber) {
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
 
 void Timer::runTimeouts() {
-    LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
+    // LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
     for (auto data : scheduledTasks) {
         if (data.second->hasElapsed()) {
             LOG(__FUNCTION__, "seq number: ", data.first, " has elapsed. Calling timeout");

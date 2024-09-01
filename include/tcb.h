@@ -23,7 +23,7 @@ class TCB {
     UINT32 snd_up;
     UINT32 snd_wl1;
     UINT32 snd_wl2;
-    UINT32 iss;
+    UINT32 iss;  // initial send sequence number
 
     /* receive sequence variables */
     UINT32 rcv_nxt;
@@ -43,6 +43,7 @@ class TCB {
     void updateState(ConnectionState state);
     ACTION updateState(char *buf, int size);
     void generateISN();
+    void generateIRS();
     void debugPrint();
 
     /* my connection state */

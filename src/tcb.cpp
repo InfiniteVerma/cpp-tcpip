@@ -31,6 +31,7 @@ TCB::TCB() {
     seg_prc = 0;
 
     generateISN();
+    generateIRS();
 }
 
 TCB::~TCB() {
@@ -50,9 +51,14 @@ void TCB::generateISN() {
     // const auto millis = chrono::duration_cast<chrono::milliseconds>(epoch).count();
 
     // snd_nxt = millis % (1 << 31);
-    snd_nxt = 1;
+    iss = 1;
 
-    LOG("Generated ISN: ", snd_nxt);
+    LOG("Generated ISN: ", iss);
+}
+
+void TCB::generateIRS() {
+    irs = 100;
+    LOG("Generated IRS: ", irs);
 }
 
 ConnectionState TCB::getState() { return myState.getState(); }
