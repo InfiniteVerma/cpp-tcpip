@@ -15,6 +15,7 @@
 #include <ctime>
 
 #include "ip.h"
+#include "messages.h"
 #include "mytcp.h"
 #include "packet.h"
 #include "state_machine.h"
@@ -243,15 +244,6 @@ void Socket::sendPacket(Packet pkt) {
     LOG(__FUNCTION__, "sending below packet");
     Utils::hexDump(payload, size);
 
-    Timer *timerInstance = Timer::getInstance();
-    ScheduledTask *task = new ScheduledTask(10.0, []() {
-        LOG("TIMEOUT HIT for HANDSHAKE!!!!");
-
-        MyTcp::setRetVal(1);
-    });
-
-    timerInstance->addTimer(pkt.getSeq(), task);
-
     LOG(__FUNCTION__, "sendto done");
 }
 
@@ -470,26 +462,38 @@ void Socket::executeNextAction(ACTION action, char *buffer, int size) {
     if (!action) {
         LOG(__FUNCTION__, " action is NULL, current statue: ", tcb.getState(), " returning!");
     } else {
-        // mutate stuff
         Packet p = Packet(buffer, size);
         Packet nextPkt;
+        Timer *timerInstance = Timer::getInstance();
+
         switch (tcb.getState()) {
-            case SYN_RECEIVED:
+            case SYN_RECEIVED: {
                 LOG(__FUNCTION__, " I switched from LISTEN TO SYN_RECEIVED");
                 tcb.rcv_nxt = p.getSeq() + 1;
                 tcb.irs = p.getSeq();  // TODO delete irs func
-                                       //           <SEQ=ISS><ACK=RCV.NXT><CTL=SYN,ACK>
                 nextPkt = action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.iss, sourceIp, destIp));
+                timerInstance->delTimer(p.getAck());
+
+                ScheduledTask *task = new ScheduledTask(10.0, []() {
+                    LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+
+                    MyTcp::setRetVal(1);
+                });
+
+                timerInstance->addTimer(nextPkt.getSeq(), task);
                 break;
-            case ESTABLISHED:
+            }
+            case ESTABLISHED: {
                 LOG(__FUNCTION__, " I switched from SYN_SENT TO ESTABLISHED");
                 tcb.rcv_nxt = p.getSeq() + 1;
                 tcb.irs = p.getSeq();
                 tcb.snd_una = p.getAck();
-                //                          <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+                timerInstance->delTimer(p.getAck());
                 nextPkt =
                     action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.snd_nxt, sourceIp, destIp));
+                MyTcp::setRetVal(0);
                 break;
+            }
             default:
                 // TODO handle
                 assert(0);

@@ -31,7 +31,6 @@ TCB::TCB() {
     seg_prc = 0;
 
     generateISN();
-    generateIRS();
 }
 
 TCB::~TCB() {
@@ -54,11 +53,6 @@ void TCB::generateISN() {
     iss = 1;
 
     LOG("Generated ISN: ", iss);
-}
-
-void TCB::generateIRS() {
-    irs = 100;
-    LOG("Generated IRS: ", irs);
 }
 
 ConnectionState TCB::getState() { return myState.getState(); }

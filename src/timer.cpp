@@ -56,12 +56,10 @@ Timer* Timer::getInstance() {
 }
 
 void Timer::addTimer(UINT32 seqNumber, ScheduledTask* task) {
-    LOG(__FUNCTION__, " called for seq: ", seqNumber);
     if (scheduledTasks.find(seqNumber) != scheduledTasks.end()) {
         assert(0);
     }
     scheduledTasks.insert({seqNumber, task});
-    LOG(__FUNCTION__, " now timers active: ", scheduledTasks.size());
 }
 
 void Timer::delTimer(UINT32 seqNumber) {
@@ -70,7 +68,7 @@ void Timer::delTimer(UINT32 seqNumber) {
         LOG(__FUNCTION__, " found seqNumber: ", seqNumber);
         scheduledTasks.erase(seqNumber);
     } else {
-        LOG(__FUNCTION__, " ERROR didn't find matching timer, available timers:");
+        LOG(__FUNCTION__, " ERROR didn't find matching timer, available timers:", scheduledTasks.size());
         for (auto data : scheduledTasks) {
             LOG(__FUNCTION__, " seq num: ", data.first);
         }
@@ -80,7 +78,7 @@ void Timer::delTimer(UINT32 seqNumber) {
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
 
 void Timer::runTimeouts() {
-    LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
+    // LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
     for (auto data : scheduledTasks) {
         if (data.second->hasElapsed()) {
             LOG(__FUNCTION__, "seq number: ", data.first, " has elapsed. Calling timeout");

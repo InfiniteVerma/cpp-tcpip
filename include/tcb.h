@@ -43,7 +43,6 @@ class TCB {
     void updateState(ConnectionState state);
     ACTION updateState(char *buf, int size);
     void generateISN();
-    void generateIRS();
     void debugPrint();
 
     /* my connection state */
