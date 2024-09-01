@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <thread>
 
@@ -58,22 +59,24 @@ class Utils {
 
     template <typename... Args>
     static void Log(const char* file, int line, Args... args) {
+        lock_guard<mutex> lg(utilsMutex);
         ostringstream tmp;
         tmp << this_thread::get_id();
         ostringstream oss;
 
         string color = CYAN;
-        if (threadDetails[tmp.str()] == "Kernel") color = ORANGE;
+        if (threadDetails[tmp.str()] == "Tcp") color = ORANGE;
 
         oss << "|" << threadDetails[tmp.str()].c_str() << "| ";
         // oss << "File: " << file << " Line: " << line << " ";
         (oss << ... << args);  // Fold expression to handle all args
-        cout << color << oss.str() << RESET << endl;
+        cout << RESET << color << oss.str() << RESET << endl;
     }
 
     static map<string, string> threadDetails;
 
     static void addThreadInfo(string);
+    static std::mutex utilsMutex;
 };
 
 // Variadic macro to capture all arguments and forward to Log function

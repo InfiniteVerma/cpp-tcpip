@@ -31,6 +31,7 @@ void client() {
 
     const char* message = "Hello, world";
 
+    LOG("Sending a msg to socket");
     ret = UserSocket::send(fd, message, strlen(message), 0);
     LOG("send ret: ", ret);
 
@@ -42,7 +43,7 @@ void client() {
 int main() {
     MyTcp::createMyTCP("Client");
     client();
-    LOG("Stopping kernel thread");
+    LOG("Stopping tcp thread");
     UserSocket::stopTCP();
     LOG("Stopping client thread and exiting");
     return 0;

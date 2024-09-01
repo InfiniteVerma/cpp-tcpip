@@ -30,7 +30,7 @@ class Packet {
    public:
     Packet(int sourcePort, int destPort);
     Packet();
-    Packet(char *rawPacket, int size);
+    Packet(const char *rawPacket, int size);
     ~Packet();
 
     const char *makePacket();
@@ -62,10 +62,16 @@ class Packet {
     static Packet getAckPacket(PktData pktData);
     static Packet getRSTPacket(PktData pktData);
 
+    static Packet constructDataPacket(PktData pktData, const char *payload, int size);
+
    private:
+    void addPayload(const char *, int);
+
     IPHeader ipHeader;
     TCPHeader tcpHeader;
-    int size;
+    int headerSize;
+    int payloadSize;
+    char *payload;
 };
 
 #endif

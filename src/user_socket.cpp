@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <mutex>
 
 #include "messages.h"
 #include "mytcp.h"
@@ -50,8 +49,13 @@ int UserSocket::bind(UINT8 fd) {
     return ret;
 }
 
-int UserSocket::listen(UINT8 fd) {
-    MyMsg msg(LISTEN_SOCKET, fd);
+/*
+ * Blocks until a client completes 3-way handshake.
+ *
+ * TODO return it's fd. Currently dummy since we have one socket on each side.
+ */
+int UserSocket::accept(UINT8 fd) {
+    MyMsg msg(ACCEPT_SOCKET, fd);
 
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
     if (ret == -1) {
@@ -61,6 +65,26 @@ int UserSocket::listen(UINT8 fd) {
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
+    return ret;
+}
+
+/*
+ * Dummy rn. Just sends the msg that's received by the tcp thread.
+ *
+ * TODO use backlog
+ */
+int UserSocket::listen(UINT8 fd, int backlog) {
+    LOG(__FUNCTION__, " BEGIN backlog not being used TODO: ", backlog);
+
+    MyMsg msg(LISTEN_SOCKET, fd);
+
+    int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
+    if (ret == -1) {
+        LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
+    }
+
+    LOG(__FUNCTION__, " TODO send the socket fd back. Not doing this rn!!");
+
     return ret;
 }
 
@@ -119,7 +143,7 @@ int UserSocket::send(UINT8 fd, const void *buffer, size_t size, int flags) {
 }
 
 int UserSocket::stopTCP() {
-    LOG(__FUNCTION__, "sending a message to kernel to stop it's thread");
+    LOG(__FUNCTION__, "sending a message to tcp thread to stop it");
     MyMsg msg(STOP_TCP_THREAD);
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
 
@@ -130,4 +154,12 @@ int UserSocket::stopTCP() {
     MyTcp::waitForThreadToDie();
 
     return ret;
+}
+
+// TODO use fd
+int UserSocket::receive(UINT8 fd, char *buffer, ssize_t length, int flags) {
+    LOG(__FUNCTION__, " BEGIN, blocking to wait for a packet in buffer");
+    int slot = MyTcp::waitForMessageInBuffer();
+    LOG(__FUNCTION__, " notified that there's a packet in buffer, slot: ", slot);
+    return MyTcp::getPacketFromBuffer(buffer, slot);
 }

@@ -41,7 +41,7 @@ class TCB {
 
     ConnectionState getState();
     void updateState(ConnectionState state);
-    ACTION updateState(char *buf, int size);
+    ACTION updateState(const char *buf, int size);
     void generateISN();
     void debugPrint();
 

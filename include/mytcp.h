@@ -19,7 +19,9 @@ class MyTcp {
     static void setRetVal(int);
 
     static void waitForThreadToDie();
+    static int waitForMessageInBuffer();
     static int insertPacketInSendBuffer(const void* buffer, int size);
+    static int getPacketFromBuffer(void* buffer, int slotIdx);
 
    private:
     MyTcp();
@@ -51,10 +53,13 @@ class MyTcp {
     static bool isRetValAvailable;
     static int retVal;
 
+    static bool isNewPktInBuffer;
+    static int slotIdx;
+
     /*
      * User data
      */
-    static char* userPacketData;
+    static char* userPacketData;  // TODO have two buffers
     static bitset<USER_PACKET_COUNT_IN_HEAP> userPacketBitset;
     static std::mutex userPacketMutex;
 };

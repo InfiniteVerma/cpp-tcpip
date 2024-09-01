@@ -29,11 +29,11 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Payload -> TCP Segment + Payload -> IP Header + TCP Segment + Payload
 - [x] Reorganize code before it gets out of hand
 - [x] Make a different thread for TCP stuff
-    - [x] Redesign the socket design for 'userland' and 'kernel' thread state
+    - [x] Redesign the socket design for 'userland' and 'tcp' (kernel) thread state
     - [x] Communicate
     - [x] Move socket logic to new thread
     - [x] Implement timer logic
-    - [x] Stop the kernel thread gracefully
+    - [x] Stop the tcp thread gracefully
     - [x] Verify the handshake that worked before
     - [x] Stop threads once handshake is done for now
 - [x] Proper handshake
@@ -48,6 +48,7 @@ Continuously iterating on it since there's so much going on here :)
     - [ ] Add tcp/ip headers and send to socket
     - [ ] After ESTABLISHED, server needs to listen for data
     - [ ] For now, get the packet and dump it
+- [ ] Add debug logging
 - [ ] Sequence and ACK logic
 - [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
 - [ ] Retransmission queue

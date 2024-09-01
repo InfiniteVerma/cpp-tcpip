@@ -11,6 +11,7 @@ enum MessageTypes {
     BIND_SOCKET,
     LISTEN_SOCKET,
     CONNECT_SOCKET,
+    ACCEPT_SOCKET,
     STOP_TCP_THREAD,
     SEND_PACKET,
     ERROR,

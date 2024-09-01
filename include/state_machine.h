@@ -66,7 +66,7 @@ class TCBStateM {
     TCBStateM();
 
     ConnectionState getState();
-    ACTION updateState(char *pkt, int size);
+    ACTION updateState(const char *pkt, int size);
     void updateState(ConnectionState);
 
    private:

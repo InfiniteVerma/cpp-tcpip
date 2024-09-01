@@ -1,7 +1,5 @@
 #include "tcb.h"
 
-#include <chrono>
-
 #include "state_machine.h"
 
 #define BUFFER_SIZE 8 * 1024 * 1024
@@ -42,8 +40,9 @@ TCB::~TCB() {
 
 void TCB::updateState(ConnectionState state) { myState.updateState(state); }
 
-ACTION TCB::updateState(char* buf, int size) { return myState.updateState(buf, size); }
+ACTION TCB::updateState(const char* buf, int size) { return myState.updateState(buf, size); }
 
+// TODO
 void TCB::generateISN() {
     // const auto now = chrono::system_clock::now();
     // const auto epoch = now.time_since_epoch();
@@ -58,7 +57,7 @@ void TCB::generateISN() {
 ConnectionState TCB::getState() { return myState.getState(); }
 
 void TCB::debugPrint() {
-    LOG("=========\nTCB Data");
+    LOG("TCB Data: ");
     // LOG("snd_una: ", snd_una);
     // LOG("snd_nxt: ", snd_nxt);
     // LOG("snd_wnd: ", snd_wnd);

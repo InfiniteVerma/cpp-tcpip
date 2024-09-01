@@ -24,9 +24,14 @@ std::condition_variable MyTcp::myCV;
 std::mutex MyTcp::myMutex;
 
 bool MyTcp::isFDBusy = false;
+
 bool MyTcp::isRetValAvailable = false;
-bool MyTcp::isStopped = false;
 int MyTcp::retVal = 0;
+
+bool MyTcp::isNewPktInBuffer = false;
+int MyTcp::slotIdx = 0;
+
+bool MyTcp::isStopped = false;
 
 // user data
 std::mutex MyTcp::userPacketMutex;
@@ -59,7 +64,7 @@ void MyTcp::createMyTCP(string mainThreadName) {
 }
 
 void MyTcp::startTCPThread() {
-    Utils::addThreadInfo("Kernel");
+    Utils::addThreadInfo("Tcp");
     while (!isStopped) {
         /* 1. react to calls from client */
         reactToUserCalls();
@@ -131,6 +136,9 @@ void MyTcp::reactToUserCalls() {
             myCV.notify_one();
         } break;
         case LISTEN_SOCKET: {
+            // dummy
+        } break;
+        case ACCEPT_SOCKET: {
             /*
              * This is block until 3-way handshake is done with a client?
              */
@@ -192,18 +200,28 @@ void MyTcp::reactToUserCalls() {
         } break;
         case STOP_TCP_THREAD: {
             stopTCPThread();
-            LOG(__FUNCTION__, " STOP_TCP_THREAD call reached kernel!");
+            LOG(__FUNCTION__, " STOP_TCP_THREAD call reached tcp thread!");
         } break;
         case SEND_PACKET: {
             LOG(__FUNCTION__, " SEND_PACKET called hit slot: ", myMsg.slotIndex, " size: ", myMsg.packetSize);
-            lock_guard<mutex> lg(userPacketMutex);
+            lock_guard<mutex> lg(userPacketMutex);  // TODO use getPacketFromBuffer
             char* startPtr = userPacketData + myMsg.slotIndex * 1024;
             char* buffer = new char[1024];
+
             memcpy(buffer, startPtr, myMsg.packetSize);
             Utils::hexDump(buffer, myMsg.packetSize);
             userPacketBitset.reset(myMsg.slotIndex);
 
             // TODO send the packet to server
+            assert(mySockets.size() != 0);
+            pair<UINT8, Socket*> socketData = mySockets.back();
+            if (socketData.second->getCurrentState() != ESTABLISHED) {
+                LOG(__FUNCTION__, " ERROR not in established state!");
+                // TODO handle this error
+                assert(0);
+            }
+
+            socketData.second->send(buffer, myMsg.packetSize, 0);
             break;
         }
         default:
@@ -215,6 +233,7 @@ void MyTcp::reactToUserCalls() {
  * Assumes mutex is acquired. TODO update comment
  */
 void MyTcp::setRetVal(int ret) {
+    if (!isRetValAvailable) return;  // TODO IDK
     retVal = 1;
     isRetValAvailable = true;
     myCV.notify_one();
@@ -250,9 +269,19 @@ void MyTcp::recvSegment() {  // TODO pg65
     ACTION action = mySocket->updateState(buffer, size);
     if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
         LOG(__FUNCTION__, " ESTABLISHED!");
+        /*
+         * Comes here in two cases:
+         *  - Ack packet: Below setRetVal unlocks the mutex notifiying server thread that handshake has completed
+         *  - Data packet: Store this in buffer and notify that packet is available to the server
+         */
         MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
+
+        // save packet to buffer after stripping ip and tcp header
+        int slot = MyTcp::insertPacketInSendBuffer(buffer + sizeof(IPHeader) + sizeof(TCPHeader),
+                                                   size - sizeof(IPHeader) - sizeof(TCPHeader));
+        if (slot == -1) assert(0);
     } else if (!action) {
-        LOG(__FUNCTION__, " action is NULL, assuming FSM wants us to discard the packet");
+        LOG(__FUNCTION__, " action is NULL and it's not ESTABLISHED, assuming FSM wants us to discard the packet");
     } else {
         mySocket->executeNextAction(action, buffer, size);
         LOG(__FUNCTION__, " executed next action");
@@ -281,11 +310,32 @@ UINT8 MyTcp::getFD() {
 int MyTcp::getRetval() {
     std::unique_lock lk(myMutex);
     myCV.wait(lk, [] { return isRetValAvailable; });  // wakes up if the flag is set
-    LOG("Conditional variable notified and isRetValAvailable is set to val: ", retVal, "");
     int ret = retVal;
+    LOG("Conditional variable notified and isRetValAvailable is set to val: ", retVal);
     isRetValAvailable = false;
     myMutex.unlock();
     return ret;
+}
+
+int MyTcp::waitForMessageInBuffer() {
+    std::unique_lock lk(userPacketMutex);
+    myCV.wait(lk, [] { return isNewPktInBuffer; });  // wakes up if the flag is set
+    LOG("Conditional variable notified and isNewPktInBuffer is set to val: ", slotIdx);
+    isNewPktInBuffer = false;
+    myMutex.unlock();
+    return slotIdx;
+}
+
+int MyTcp::getPacketFromBuffer(void* buffer, int slotIdx) {
+    if (slotIdx < 0 || slotIdx > USER_PACKET_COUNT_IN_HEAP) assert(0);
+
+    lock_guard<mutex> lg(userPacketMutex);  // TODO use getPacketFromBuffer
+    char* startPtr = userPacketData + slotIdx * 1024;
+
+    memcpy(buffer, startPtr, 1024);
+    Utils::hexDump((const char*)buffer, 1024);
+    userPacketBitset.reset(slotIdx);
+    return 1024;
 }
 
 void MyTcp::waitForThreadToDie() { myThread.join(); }
@@ -305,5 +355,6 @@ int MyTcp::insertPacketInSendBuffer(const void* buffer, int size) {
         }
     }
 
+    myCV.notify_one();
     return slot;
 }

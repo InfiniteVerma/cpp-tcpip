@@ -9,7 +9,7 @@ TCBStateM::TCBStateM() { state = CLOSED; }
 
 ConnectionState TCBStateM::getState() { return state; }
 
-ACTION TCBStateM::updateState(char *pkt, int size) {
+ACTION TCBStateM::updateState(const char *pkt, int size) {
     LOG(__FUNCTION__, " BEGIN current State: ", state);
 
     if (!pkt && state == CLOSED)  // TODO better way?
@@ -49,8 +49,11 @@ ACTION TCBStateM::updateState(char *pkt, int size) {
         }
     }
 
-    LOG("Could not find a valid ACTION, returning NULL\n");
-    assert(0);
+    if (getState() != ESTABLISHED) {
+        LOG("Could not find a valid ACTION and not in estalished state. Not handling this case rn");  // TODO
+        assert(0);
+    }
+    LOG("Could not find a valid ACTION, returning NULL, assuming it's a data pkt");
     return NULL;
 }
 

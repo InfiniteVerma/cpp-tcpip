@@ -15,7 +15,6 @@
 #include <ctime>
 
 #include "ip.h"
-#include "messages.h"
 #include "mytcp.h"
 #include "packet.h"
 #include "state_machine.h"
@@ -326,8 +325,6 @@ int Socket::receivePacketBlocking(char *buffer, int &size, int seconds) {
         return retval;
     } else if (retval) {
         // Data is available
-        printf("Data is available now.\n");
-
         struct sockaddr_in saddr;
         socklen_t socklen = sizeof(saddr);
 
@@ -374,30 +371,19 @@ void Socket::receivePacketNonBlocking(char *buffer, int &size) {
     }
 }
 
-// TODO to be used after handshake completes
+/*
+ * Used to used the data packet. Input contains just the payload.
+ *
+ * It first adds the headers, constructors a Packet from it and then calls sendPacket
+ */
 void Socket::send(const char *message, size_t len, int flags) {
     LOG("Client: sending: ", message, " - len: ", len);
 
-    sockaddr_in saddr = {};
-    // saddr.sin_family = AF_INET;
-    // saddr.sin_port = htons(9000); // Destination port
-    // saddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Destination IP
+    LOG("Client: TODO fix the sequence logic");
+    PktData pktData(tcb.localPortNum, tcb.remotePortNum, tcb.iss, 0, sourceIp, destIp);
+    Packet packet = Packet::constructDataPacket(pktData, message, len);
 
-    //// Check for invalid IP address
-    // if (saddr.sin_addr.s_addr == INADDR_NONE) {
-    //     LOG("Invalid IP address\n");
-    //     return;
-    // }
-
-    ssize_t bytesSent = sendto(socketFd, message, len, flags, (sockaddr *)&saddr, sizeof(saddr));
-
-    if (bytesSent == -1) {
-        printf(
-            "Name: %s: Oh dear, something went wrong with sendto()! error: %d, "
-            "%s\n",
-            desc.c_str(), errno, strerror(errno));
-        assert(0);
-    }
+    sendPacket(packet);
 }
 
 void Socket::close() {
@@ -457,7 +443,7 @@ void Socket::debugPrint() {
     tcb.debugPrint();
 }
 
-ACTION Socket::updateState(char *buf, int size) {
+ACTION Socket::updateState(const char *buf, int size) {
     LOG(__FUNCTION__, " BEGIN");
     return tcb.updateState(buf, size);
 }

@@ -25,7 +25,7 @@ class Socket {
     void send(const char *message, size_t len, int flags);
     void close();
     int accept();
-    ACTION updateState(char *buf, int size);
+    ACTION updateState(const char *buf, int size);
     void executeNextAction(ACTION action, char *buf, int size);
     ConnectionState getCurrentState();
     UINT32 getLastTransmittedSeqNumber();
