@@ -184,16 +184,12 @@ void MyTcp::setRetVal(int ret) {
 }
 
 void MyTcp::processTimeouts() {
-    // LOG(__FUNCTION__ << " BEGIN (TODO)";.
-    // LOG(__FUNCTION__ << " iterating through timer tasks and checking!");
-
     Timer* timerInstance = Timer::getInstance();
     timerInstance->runTimeouts();
 }
 
 void MyTcp::recvPackets() {
-    // LOG(__FUNCTION__ << " BEGIN (TODO)");
-    this_thread::sleep_for(std::chrono::seconds(1));
+    // LOG(__FUNCTION__, " BEGIN ");
 
     if (mySockets.empty()) return;
 
@@ -205,12 +201,12 @@ void MyTcp::recvPackets() {
     if (mySocket->shouldListen()) {
         char* buffer = new char[65535];
         int size = 0;
-        int ret = mySocket->receivePacketBlocking(buffer, size, 4);
+        int ret = mySocket->receivePacketBlocking(buffer, size, 1);
         if (ret > 0) {
-            LOG(__FUNCTION__, " get a packet!");
+            LOG(__FUNCTION__, " get a packet! Hexdump:");
             Utils::hexDump(buffer, size);
         } else {
-            LOG(__FUNCTION__, " no packet!");
+            LOG(__FUNCTION__, " no packet, returning");
         }
     } else {
         LOG(__FUNCTION__, " socket not in listen stage!");

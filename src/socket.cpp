@@ -14,7 +14,6 @@
 #include <cstring>
 #include <ctime>
 
-#include "iostream"
 #include "ip.h"
 #include "packet.h"
 #include "state_machine.h"

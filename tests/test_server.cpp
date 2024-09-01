@@ -75,7 +75,8 @@ void server() {
 int main() {
     MyTcp::createMyTCP("Server");
     server();
+    LOG("Stopping kernel thread");
     UserSocket::stopTCP();
-    MyTcp::waitForThreadToDie();
+    LOG("Stopping client thread and exiting");
     return 0;
 }

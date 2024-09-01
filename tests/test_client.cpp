@@ -56,7 +56,8 @@ void client() {
 int main() {
     MyTcp::createMyTCP("Client");
     client();
-    LOG("Stopping the threads");
+    LOG("Stopping kernel thread");
     UserSocket::stopTCP();
+    LOG("Stopping client thread and exiting");
     return 0;
 }
