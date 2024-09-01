@@ -29,6 +29,7 @@ class Socket {
     ACTION updateState(char *buf, int size);
     void executeNextAction(ACTION action);
     ConnectionState getCurrentState();
+    UINT32 getLastTransmittedSeqNumber();
 
     static int allocateEphemeralPortNum();
     static void freeEphemeralPortNum(int portNum);

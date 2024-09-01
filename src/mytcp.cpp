@@ -3,7 +3,6 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-#include <chrono>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
@@ -37,7 +36,7 @@ MyTcp::MyTcp() {
     // just for testing
     // Timer* timerInstance = Timer::getInstance();
     // ScheduledTask* task = new ScheduledTask(2.0, []() { LOG("Example timeout of 2 seconds, remove!"); });
-    // timerInstance->addTask(task);
+    // timerInstance->addTimer(task);
 }
 
 MyTcp::~MyTcp() { LOG("Destructor called!"); }
@@ -155,13 +154,13 @@ void MyTcp::reactToUserCalls() {
                     myCV.notify_one();
                 } else {
                     // TODO add 5 seconds timer which if fails should return error code
-                    Timer* timerInstance = Timer::getInstance();
-                    ScheduledTask* task = new ScheduledTask(10.0, []() {
-                        LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+                    //Timer* timerInstance = Timer::getInstance();
+                    //ScheduledTask* task = new ScheduledTask(10.0, []() {
+                    //    LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
-                        MyTcp::setRetVal(1);
-                    });
-                    timerInstance->addTask(task);
+                    //    MyTcp::setRetVal(1);
+                    //});
+                    //timerInstance->addTimer(socketData.second->getLastTransmittedSeqNumber(), task);
                     LOG(__FUNCTION__, " connect SYN call passed. Waiting for reply now!");
                 }
             }
@@ -206,9 +205,16 @@ void MyTcp::recvPackets() {
         if (ret > 0) {
             LOG(__FUNCTION__, " get a packet! Hexdump:");
             Utils::hexDump(buffer, size);
+            Packet pkt = Packet(buffer, size);  // TODO better way?
+            LOG(__FUNCTION__, " ack number: ", pkt.getAck());
+
+            Timer* timerInstance = Timer::getInstance();
+            timerInstance->delTimer(pkt.getAck());
+
             ACTION action = mySocket->updateState(buffer, size);
-            if (!action && mySocket->getCurrentState() == ESTABLISHED) {
+            if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
                 LOG(__FUNCTION__, " ESTABLISHED!");
+                MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
             } else {
                 mySocket->executeNextAction(action);
                 LOG(__FUNCTION__, " executed next action");

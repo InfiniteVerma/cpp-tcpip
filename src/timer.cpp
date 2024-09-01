@@ -2,10 +2,8 @@
 
 #include <sched.h>
 
-#include <chrono>
 #include <ctime>
 #include <iomanip>
-#include <thread>
 
 #include "iostream"
 
@@ -56,14 +54,29 @@ Timer* Timer::getInstance() {
     return myTimerInstance;
 }
 
-void Timer::addTask(ScheduledTask* task) { scheduledTasks.push_back(task); }
+void Timer::addTimer(UINT32 seqNumber, ScheduledTask* task) { scheduledTasks.insert({seqNumber, task}); }
+
+void Timer::delTimer(UINT32 seqNumber) {
+    LOG(__FUNCTION__, " called for seq: ", seqNumber);
+    if (scheduledTasks.find(seqNumber) != scheduledTasks.end()) {
+        LOG(__FUNCTION__, " found seqNumber: ", seqNumber);
+        scheduledTasks.erase(seqNumber);
+    } else {
+        LOG(__FUNCTION__, " ERROR didn't find matching timer, available timers:");
+        for (auto data : scheduledTasks) {
+            LOG(__FUNCTION__, " seq num: ", data.first);
+        }
+    }
+}
 
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
 
 void Timer::runTimeouts() {
-    for (ScheduledTask* task : scheduledTasks) {
-        if (task->hasElapsed()) {
-            task->executeCallback();
+    LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
+    for (auto data : scheduledTasks) {
+        if (data.second->hasElapsed()) {
+            LOG(__FUNCTION__, "seq number: ", data.first, " has elapsed. Calling timeout");
+            data.second->executeCallback();
         }
     }
 }

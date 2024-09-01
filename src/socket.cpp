@@ -1,5 +1,3 @@
-#include "socket.h"
-
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -14,11 +12,13 @@
 #include <cstring>
 #include <ctime>
 
+#include "socket.h"
+#include "timer.h"
 #include "ip.h"
-#include "mytcp.h"
 #include "packet.h"
 #include "state_machine.h"
 #include "tcb.h"
+#include "mytcp.h"
 using namespace std;
 
 unsigned int getChecksumVal(void *ipHeader) {
@@ -150,6 +150,11 @@ int Socket::connect() {
     return ret;
 }
 
+UINT32 Socket::getLastTransmittedSeqNumber()  // TODO a better way?
+{
+    return tcb.snd_nxt - 1;
+}
+
 /*
  * Three way handshake as done by Client.
  *
@@ -173,9 +178,9 @@ int Socket::threeWayHandshakeClient() {
 
     tcb.snd_nxt++;
 
-    LOG("Sending 1st SYN\n");
+    LOG("Sending 1st SYN seq:", tcb.snd_nxt - 1);
     sendPacket(pkt);
-    LOG("1st SYN sent\n");
+    LOG("1st SYN sent");
 
     // debugPrint();
 
@@ -234,6 +239,16 @@ void Socket::sendPacket(Packet pkt) {
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress, sizeof(destAddress));
 
     Utils::hexDump(payload, size);
+
+    Timer* timerInstance = Timer::getInstance();
+    ScheduledTask* task = new ScheduledTask(10.0, []() {
+            LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+
+            MyTcp::setRetVal(1);
+            });
+
+    timerInstance->addTimer(pkt.getSeq(), task);
+    LOG(__FUNCTION__, " added timer for pkt seq: ", pkt.getSeq());
 
     LOG(__FUNCTION__, "sendto done");
 }

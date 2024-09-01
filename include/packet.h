@@ -34,6 +34,7 @@ class Packet {
     const char *makePacket();
     int getSize();
     int getSeq();
+    int getAck();
 
     // allowed modifiers
     void setSequenceNumber(int);

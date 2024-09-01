@@ -49,6 +49,8 @@ int Packet::getSize() { return size; }
 
 int Packet::getSeq() { return tcpHeader.seq_number; }
 
+int Packet::getAck() { return tcpHeader.ack_number; }
+
 Packet Packet::getSYNPacket(PktData pktData) {
     Packet packet(pktData.localPortNum, pktData.remotePortNum);
 

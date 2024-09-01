@@ -45,11 +45,12 @@ void TCB::updateState(ConnectionState state) { myState.updateState(state); }
 ACTION TCB::updateState(char* buf, int size) { return myState.updateState(buf, size); }
 
 void TCB::generateISN() {
-    const auto now = chrono::system_clock::now();
-    const auto epoch = now.time_since_epoch();
-    const auto millis = chrono::duration_cast<chrono::milliseconds>(epoch).count();
+    // const auto now = chrono::system_clock::now();
+    // const auto epoch = now.time_since_epoch();
+    // const auto millis = chrono::duration_cast<chrono::milliseconds>(epoch).count();
 
-    snd_nxt = millis % (1 << 31);
+    // snd_nxt = millis % (1 << 31);
+    snd_nxt = 1;
 
     LOG("Generated ISN: ", snd_nxt);
 }

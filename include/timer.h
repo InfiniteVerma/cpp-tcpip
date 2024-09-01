@@ -5,6 +5,8 @@
 #include <ctime>
 #include <vector>
 
+#include "common.h"
+
 using namespace std;
 
 typedef void (*FUNCTION)(void);
@@ -23,7 +25,8 @@ class ScheduledTask {
 
 class Timer {
    public:
-    void addTask(ScheduledTask* task);
+    void addTimer(UINT32 seq, ScheduledTask* task);
+    void delTimer(UINT32 seq);
     void listTasks();
     void runTimeouts();
 
@@ -32,7 +35,7 @@ class Timer {
    private:
     Timer();
     ~Timer();
-    vector<ScheduledTask*> scheduledTasks;
+    map<UINT32, ScheduledTask*> scheduledTasks;
 
     static Timer* myTimerInstance;
 };

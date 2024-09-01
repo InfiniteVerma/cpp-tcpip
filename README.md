@@ -43,6 +43,7 @@ Continuously iterating on it since there's so much going on here :)
     - [ ] Test 3 way handshake with this
 - [ ] Try sending a packet after connection is established
 - [ ] Sequence window logic
+- [ ] getISN from time module 2**32
 
 End goal: Sending a file as a byte stream over this tcp/ip implementation
 
