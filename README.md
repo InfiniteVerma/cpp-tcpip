@@ -28,7 +28,7 @@ Continuously iterating on it since there's so much going on here :)
     - [x] One way FSM
     - [x] Payload -> TCP Segment + Payload -> IP Header + TCP Segment + Payload
 - [x] Reorganize code before it gets out of hand
-- [ ] Make a different thread for TCP stuff
+- [x] Make a different thread for TCP stuff
     - [x] Redesign the socket design for 'userland' and 'kernel' thread state
     - [x] Communicate
     - [x] Move socket logic to new thread
@@ -37,7 +37,7 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Verify the handshake that worked before
     - [x] Stop threads once handshake is done for now
 - [ ] Proper handshake
-    - [ ] Understand all the snd_nxt etc uses and use it in timer logic
+    - [ ] Implement it as designed in the "Event Processing" chapter in RFC
     - [ ] Full state machine
     - [ ] Do 3 way handshake and maintain the state (of FSM) properly
 - [ ] Close socket and free resources
