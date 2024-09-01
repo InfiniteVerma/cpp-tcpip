@@ -63,7 +63,7 @@ Socket::Socket(std::string desc, const char *ip, int port) {
     socketFd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
 
     /*
-     * Allocating memory and copying it before oringal pointer mutates corrupting source/dest ip
+     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after reactToUserCalls ends
      */
     this->sourceIp = new char[strlen(ip) + 1];
     strcpy(sourceIp, ip);
@@ -88,7 +88,7 @@ Socket::~Socket() {
 
 void Socket::setDestIp(const char *ip) {
     /*
-     * Allocating memory and copying it before oringal pointer mutates corrupting source/dest ip
+     * Allocating memory and copying it before original pointer points to MyMsg instance that gets deleted after reactToUserCalls ends
      */
     this->destIp = new char[strlen(ip) + 1];
     strcpy(destIp, ip);
