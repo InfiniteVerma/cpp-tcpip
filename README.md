@@ -41,7 +41,7 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Implement it as designed in the "Event Processing" chapter in RFC
     - [?] Full state machine
     - [x] Do 3 way handshake and maintain the state (of FSM) properly
-- [ ] Close socket and free resources
+- [x] Close socket and free resources
 - [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
 - [ ] Send data after handshake and then close socket
 - [ ] Retransmission queue
