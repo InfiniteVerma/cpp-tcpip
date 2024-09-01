@@ -241,6 +241,8 @@ void Socket::sendPacket(Packet pkt) {
 
     sendto(socketFd, payload, size, 0, (struct sockaddr *)&destAddress, sizeof(destAddress));
 
+    delete[] payload;
+
     LOG(__FUNCTION__, "sending below packet");
     Utils::hexDump(payload, size);
 
@@ -398,7 +400,10 @@ void Socket::send(const char *message, size_t len, int flags) {
     }
 }
 
-void Socket::close() { ::close(socketFd); }
+void Socket::close() {
+    LOG(__FUNCTION__, " closing socket. TODO free any memory?");
+    ::close(socketFd);
+}
 
 /*
  * TODO this is complicated too. Server process isn't directly awake that 3-way

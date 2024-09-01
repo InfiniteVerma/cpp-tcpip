@@ -46,9 +46,13 @@ void server() {
 
     ret = UserSocket::listen(fd);
 
-    LOG("listen ret: ", ret, "\n");
+    LOG("listen ret: ", ret);
 
-    LOG("TODO listen handshake done!\n");
+    ret = UserSocket::close(fd);
+
+    LOG("close ret: ", ret);
+
+    LOG("TODO listen handshake done!");
     // while (1) {
     //     int clientSocket = socket.accept();
     //     gLOG("SERVER: clientSocket: " , clientSocket , "\n");

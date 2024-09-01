@@ -23,7 +23,7 @@ vector<pair<UINT8, Socket*>> MyTcp::mySockets;
 std::condition_variable MyTcp::myCV;
 std::mutex MyTcp::myMutex;
 
-bool MyTcp::isFDAvailable = false;
+bool MyTcp::isFDBusy = false;
 bool MyTcp::isRetValAvailable = false;
 bool MyTcp::isStopped = false;
 int MyTcp::retVal = 0;
@@ -94,7 +94,7 @@ void MyTcp::reactToUserCalls() {
 
                 Socket* newSocket = new Socket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
                 int newFD = getFreeFD();
-                isFDAvailable = true;
+                isFDBusy = true;
 
                 newSocket->setDestIp(myMsg.destIpAddr);
                 mySockets.push_back(make_pair(newFD, newSocket));
@@ -138,9 +138,24 @@ void MyTcp::reactToUserCalls() {
             // isRetValAvailable = true;
             // myCV.notify_one();
         } break;
-        case CLOSE_SOCKET:
+        case CLOSE_SOCKET: {
+            std::lock_guard lk(myMutex);
+            pair<UINT8, Socket*> socketData = mySockets.back();
+            LOG("Listening socket with fd: <", myMsg.fd, ">");
+            LOG("Stored fd: ", socketData.first, "");
+            if (socketData.first != myMsg.fd) {
+                LOG("Invalid fd passed: <", myMsg.fd, ">");
+                retVal = 1;
+            } else {
+                socketData.second->close();
+                isFDBusy = false;
+                mySockets.pop_back();
+                retVal = 0;
+            }
+            isRetValAvailable = true;
             LOG("CLOSE_SOCKET called TODO!");
-            break;
+            myCV.notify_one();
+        } break;
         case CONNECT_SOCKET: {
             LOG("CONNECT_SOCKET called ongoing!");
             pair<UINT8, Socket*> socketData = mySockets.back();
@@ -221,47 +236,10 @@ void MyTcp::recvSegment() {  // TODO pg65
         LOG(__FUNCTION__, " executed next action");
     }
 
-#if 0
-    if (mySocket->getCurrentState() == LISTEN) {
-        LOG(__FUNCTION__, " get a packet! Hexdump:");
-        Utils::hexDump(buffer, size);
-        LOG(__FUNCTION__, " ack number: ", pkt.getAck());
-
-        if (pkt.isRSTSet()) {
-            // discarded
-        } else if (pkt.isACKSet() || pkt.isSYNSet()) {
-            Timer* timerInstance = Timer::getInstance();
-            timerInstance->delTimer(pkt.getAck());  // in case seq doesn't match this fails silently
-
-            ACTION action = mySocket->updateState(buffer, size);
-            if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
-                LOG(__FUNCTION__, " ESTABLISHED!");
-                MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
-            } else {
-                mySocket->executeNextAction(action);
-                LOG(__FUNCTION__, " executed next action");
-            }
-        } else {
-            assert(0);
-        }
-    } else {
-        LOG(__FUNCTION__, " socket not in listen stage and received a pkt!");
-        // An incoming segment containing RST is discarded
-        // An incoming segment not containing a RST causes a RST to be sent in response
-        if (pkt.isRSTSet()) {
-            LOG(__FUNCTION__, " rst packet, discarding");
-        } else {
-            LOG(__FUNCTION__, " not containing rst, replying with rst");
-            // TODO
-            assert(0);
-        }
-    }
-#endif
+    delete[] buffer;
 
     LOG(__FUNCTION__, " After processing a packet!");
     mySocket->debugPrint();
-
-    delete[] buffer;
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }
@@ -270,10 +248,10 @@ int MyTcp::getFreeFD() { return 20; }
 
 UINT8 MyTcp::getFD() {
     std::unique_lock lk(myMutex);
-    myCV.wait(lk, [] { return isFDAvailable; });  // wakes up if isFDAvailable is set
-    LOG("Conditional variable notified and isFDAvailable is set!");
+    myCV.wait(lk, [] { return isFDBusy; });  // wakes up if isFDBusy is set
+    LOG("Conditional variable notified and isFDBusy is set!");
     UINT8 fd = mySockets.back().first;
-    isFDAvailable = false;
+    isFDBusy = false;
     myMutex.unlock();
     return fd;
 }

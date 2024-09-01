@@ -43,7 +43,7 @@ class MyTcp {
     static std::condition_variable myCV;
     static std::mutex myMutex;
 
-    static bool isFDAvailable;
+    static bool isFDBusy;
     static bool isRetValAvailable;
     static int retVal;
 };

@@ -46,7 +46,9 @@ void client() {
 
     LOG("connect ret: ", ret);
 
-    LOG("Client TODO");
+    ret = UserSocket::close(fd);
+
+    LOG("close ret: ", ret);
 
     // const char *message = "CLOSE";
     // socket.send(message, strlen(message), 0);

@@ -81,6 +81,21 @@ int UserSocket::connect(UINT8 fd) {
     return ret;
 }
 
+int UserSocket::close(UINT8 fd) {
+    MyMsg msg(CLOSE_SOCKET, fd);
+    int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
+
+    if (ret == -1) {
+        LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
+    }
+
+    if (ret != -1) {
+        ret = MyTcp::getRetval();
+    }
+
+    return ret;
+}
+
 int UserSocket::stopTCP() {
     LOG(__FUNCTION__, "sending a message to kernel to stop it's thread");
     MyMsg msg(STOP_TCP_THREAD);
