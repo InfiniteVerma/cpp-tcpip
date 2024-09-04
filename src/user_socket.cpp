@@ -1,8 +1,10 @@
 #include "user_socket.h"
 
+#include <stdlib.h>
 #include <sys/msg.h>
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 #include "messages.h"
@@ -14,6 +16,12 @@
  *
  */
 UINT8 UserSocket::create(std::string s, std::string srcIp, std::string destIp, int port) {
+    char *logTypeEnvVal = getenv("LOGTYPE");
+    Utils::writeToLogFile = true;
+    Utils::logFileName = s + ".log";
+
+    if (!logTypeEnvVal || strcmp(logTypeEnvVal, "FILE") == 0) Utils::writeToLogFile = false;
+
     int msgQueueID = MyTcp::getMsgQueueID();
 
     LOG("MsgQueueID: ", msgQueueID);

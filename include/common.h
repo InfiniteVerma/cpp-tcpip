@@ -2,6 +2,7 @@
 #define __RFC793_COMMON__
 
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -23,8 +24,32 @@ const std::string CYAN = "\033[36m";
 const std::string WHITE = "\033[37m";
 const std::string ORANGE = "\033[38;5;208m";
 
+// Variadic macro to capture all arguments and forward to Log function
+#define LOG(...) Utils::Log(__FILE__, __LINE__, __VA_ARGS__)
+
 class Utils {
    public:
+    template <typename... Args>
+    static void Log(const char* file, int line, Args... args) {
+        ostringstream tmp;
+        tmp << this_thread::get_id();
+        ostringstream oss;
+
+        string color = CYAN;
+        if (threadDetails[tmp.str()] == "Tcp") color = ORANGE;
+
+        oss << "|" << threadDetails[tmp.str()].c_str() << "| ";
+        // oss << "File: " << file << " Line: " << line << " ";
+        (oss << ... << args);  // Fold expression to handle all args
+
+        if (writeToLogFile) {
+            ofstream logFile(logFileName, ios_base::app);
+            logFile << RESET << color << oss.str() << RESET << endl;
+        } else {
+            cout << RESET << color << oss.str() << RESET << endl;
+        }
+    }
+
     static void hexDump(const char* data, int size) {
         cout << " =======\nHEX DUMP \n";
         const int bytesPerLine = 16;  // Number of bytes per line in the dump
@@ -57,29 +82,13 @@ class Utils {
         cout << " =======\nHEX DUMP \n";
     }
 
-    template <typename... Args>
-    static void Log(const char* file, int line, Args... args) {
-        lock_guard<mutex> lg(utilsMutex);
-        ostringstream tmp;
-        tmp << this_thread::get_id();
-        ostringstream oss;
-
-        string color = CYAN;
-        if (threadDetails[tmp.str()] == "Tcp") color = ORANGE;
-
-        oss << "|" << threadDetails[tmp.str()].c_str() << "| ";
-        // oss << "File: " << file << " Line: " << line << " ";
-        (oss << ... << args);  // Fold expression to handle all args
-        cout << RESET << color << oss.str() << RESET << endl;
-    }
-
     static map<string, string> threadDetails;
 
     static void addThreadInfo(string);
     static std::mutex utilsMutex;
-};
 
-// Variadic macro to capture all arguments and forward to Log function
-#define LOG(...) Utils::Log(__FILE__, __LINE__, __VA_ARGS__)
+    static string logFileName;
+    static bool writeToLogFile;
+};
 
 #endif
