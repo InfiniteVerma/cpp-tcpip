@@ -7,6 +7,10 @@ This project is a custom implementation of the TCP/IP protocol stack (as per RFC
  - **Data Transmission**: Sending and receiving data between connected sockets is functional (currently using some workarounds).
  - **User and Kernel Thread Simulation**: Socket operations are initiated by the user thread and executed by a separate "kernel" thread using message queues for inter-thread communication.
 
+
+https://github.com/user-attachments/assets/4f0875ee-477c-42e6-8804-d0b4579dc0fe
+
+
 ## Current Status
 
 Core mechanism of the TCP protocol are implemented (with some hacks) including connection establishment (3-way handshake) and data transfer. Details are mentioned below in **Plan** section.
