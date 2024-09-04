@@ -18,7 +18,7 @@ using namespace std;
  * Client: 192.168.1.2
  */
 
-void server() {
+void runServer() {
     LOG("Hello from server thread");
 
     string name = "Server";
@@ -36,18 +36,20 @@ void server() {
     ret = UserSocket::listen(fd, 1);
     LOG("listen ret: ", ret);
 
+    int clientSocketFD = UserSocket::accept(fd);  // returns when there is a packet available
+
     while (1) {
-        int clientSocketFD = UserSocket::accept(fd);  // returns when there is a packet available
         LOG(__FUNCTION__, "Accept request from a client! Will now block until it sends a packet");
 
         char* buffer = new char[1024];
         int size = UserSocket::receive(clientSocketFD, buffer, sizeof(buffer), 0);
 
-        LOG(__FUNCTION__, "receive returns, size: ", size);
+        LOG(__FUNCTION__, " receive returns, size: ", size);
 
         if (size > 0) {
-            cout << buffer << "\n";
-            break;
+            cout << "Msg: <" << buffer << ">\n";
+
+            if (strcmp(buffer, "CLOSE") == 0) break;
         } else {
             LOG(__FUNCTION__, " error size is not valid: ", size);
             break;
@@ -60,7 +62,7 @@ void server() {
 
 int main() {
     MyTcp::createMyTCP("Server");
-    server();
+    runServer();
     LOG("Stopping tcp thread");
     UserSocket::stopTCP();
     LOG("Stopping client thread and exiting");

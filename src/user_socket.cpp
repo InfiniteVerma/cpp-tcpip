@@ -20,7 +20,7 @@ UINT8 UserSocket::create(std::string s, std::string srcIp, std::string destIp, i
     Utils::writeToLogFile = true;
     Utils::logFileName = s + ".log";
 
-    if (!logTypeEnvVal || strcmp(logTypeEnvVal, "FILE") == 0) Utils::writeToLogFile = false;
+    if (!logTypeEnvVal || strcmp(logTypeEnvVal, "STDOUT") == 0) Utils::writeToLogFile = false;
 
     int msgQueueID = MyTcp::getMsgQueueID();
 
@@ -174,7 +174,8 @@ int UserSocket::stopTCP() {
 // TODO use fd
 int UserSocket::receive(UINT8 fd, char *buffer, ssize_t length, int flags) {
     LOG(__FUNCTION__, " BEGIN, blocking to wait for a packet in buffer");
-    int slot = MyTcp::waitForMessageInBuffer();
-    LOG(__FUNCTION__, " notified that there's a packet in buffer, slot: ", slot);
-    return MyTcp::getPacketFromBuffer(buffer, slot);
+    pair<int, int> slotAndSize = MyTcp::waitForMessageInBuffer();
+    LOG(__FUNCTION__, " notified that there's a packet in buffer, slot: ", slotAndSize.first,
+        " of size: ", slotAndSize.second);
+    return MyTcp::getPacketFromBuffer(buffer, slotAndSize.first, slotAndSize.second);
 }

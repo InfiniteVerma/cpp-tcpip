@@ -33,9 +33,10 @@ int MyTcp::slotIdx = 0;
 
 bool MyTcp::isStopped = false;
 
-// user data
+/* user data */
 std::mutex MyTcp::userPacketMutex;
 char* MyTcp::userPacketData = nullptr;
+int MyTcp::packetSize = 0;
 bitset<USER_PACKET_COUNT_IN_HEAP> MyTcp::userPacketBitset = {0};
 
 MyTcp::MyTcp() {
@@ -207,7 +208,7 @@ void MyTcp::reactToUserCalls() {
             LOG(__FUNCTION__, " SEND_PACKET called hit slot: ", myMsg.slotIndex, " size: ", myMsg.packetSize);
             lock_guard<mutex> lg(userPacketMutex);  // TODO use getPacketFromBuffer
             char* startPtr = userPacketData + myMsg.slotIndex * 1024;
-            char* buffer = new char[1024];
+            char* buffer = new char[myMsg.packetSize];
 
             memcpy(buffer, startPtr, myMsg.packetSize);
             Utils::hexDump(buffer, myMsg.packetSize);
@@ -329,32 +330,34 @@ int MyTcp::getRetval() {
     return ret;
 }
 
-int MyTcp::waitForMessageInBuffer() {
+pair<int, int> MyTcp::waitForMessageInBuffer() {
     LOG(__FUNCTION__, " BEGIN");
     std::unique_lock lk(userPacketMutex);
     myCV.wait(lk, [] { return isNewPktInBuffer; });  // wakes up if the flag is set
     LOG(__FUNCTION__, " Conditional variable notified and isNewPktInBuffer is set to val: ", slotIdx);
     isNewPktInBuffer = false;
+    int size = packetSize;
+    packetSize = 0;
     myMutex.unlock();
-    return slotIdx;
+    return make_pair(slotIdx, size);
 }
 
-int MyTcp::getPacketFromBuffer(void* buffer, int slotIdx) {
+int MyTcp::getPacketFromBuffer(void* buffer, int slotIdx, int size) {
     if (slotIdx < 0 || slotIdx > USER_PACKET_COUNT_IN_HEAP) assert(0);
 
     lock_guard<mutex> lg(userPacketMutex);  // TODO use getPacketFromBuffer
     char* startPtr = userPacketData + slotIdx * 1024;
 
-    memcpy(buffer, startPtr, 1024);
-    Utils::hexDump((const char*)buffer, 1024);
+    memcpy(buffer, startPtr, size);
+    Utils::hexDump((const char*)buffer, size);
     userPacketBitset.reset(slotIdx);
-    return 1024;
+    return size;
 }
 
 void MyTcp::waitForThreadToDie() { myThread.join(); }
 
 int MyTcp::insertPacketInSendBuffer(const void* buffer, int size) {
-    LOG(__FUNCTION__, " BEGIN");
+    LOG(__FUNCTION__, " BEGIN: ", size);
     lock_guard<mutex> lg(userPacketMutex);
     int slot = -1;
     for (int i = 0; i < USER_PACKET_COUNT_IN_HEAP; i++) {
@@ -368,6 +371,7 @@ int MyTcp::insertPacketInSendBuffer(const void* buffer, int size) {
         }
     }
 
+    packetSize = size;
     isNewPktInBuffer = true;
     LOG(__FUNCTION__, " notifying for pkt in send buffer slot: ", slot);
     myCV.notify_one();

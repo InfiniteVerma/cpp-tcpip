@@ -14,7 +14,7 @@
  * Client: 192.168.1.2
  */
 
-void client() {
+void runClient() {
     LOG(__FUNCTION__, "Hello from client thread");
 
     string name = "Client";
@@ -30,9 +30,13 @@ void client() {
     LOG(__FUNCTION__, "connect ret: ", ret);
 
     const char* message = "Hello, world";
-
     ret = UserSocket::send(fd, message, strlen(message), 0);
-    LOG(__FUNCTION__, "send ret: ", ret);
+
+    message = "Hello again!";
+    ret = UserSocket::send(fd, message, strlen(message), 0);
+
+    message = "CLOSE";
+    ret = UserSocket::send(fd, message, strlen(message), 0);
 
     ret = UserSocket::close(fd);
 
@@ -41,7 +45,7 @@ void client() {
 
 int main() {
     MyTcp::createMyTCP("Client");
-    client();
+    runClient();
     LOG(__FUNCTION__, "Stopping tcp thread");
     UserSocket::stopTCP();
     LOG(__FUNCTION__, "Stopping client thread and exiting");
