@@ -42,15 +42,17 @@ Continuously iterating on it since there's so much going on here :)
     - [?] Full state machine
     - [x] Do 3 way handshake and maintain the state (of FSM) properly
 - [x] Close socket and free resources
-- [ ] Send and receive data
-    - [ ] Insert packet in a buffer and use a bitset with mutex
-    - [ ] Retrieve packet in tcp thread
-    - [ ] Add tcp/ip headers and send to socket
-    - [ ] After ESTABLISHED, server needs to listen for data
-    - [ ] For now, get the packet and dump it
+- [x] Send and receive data
+    - [x] Insert packet in a buffer and use a bitset with mutex
+    - [x] Retrieve packet in tcp thread
+    - [x] Add tcp/ip headers and send to socket
+    - [x] After ESTABLISHED, server needs to listen for data
+    - [x] For now, get the packet and dump it
 - [ ] Add debug logging
+    - [ ] write to a logfile to keep it separate from user code
 - [ ] Sequence and ACK logic
 - [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
+- [ ] Revisit FSM hacking done in recvSegment
 - [ ] Retransmission queue
     - [ ] Test 3 way handshake with this
 - [ ] Add properly error codes
