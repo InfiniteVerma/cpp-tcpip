@@ -182,6 +182,7 @@ void MyTcp::reactToUserCalls() {
                 retVal = 1;
             } else {
                 int retVal = socketData.second->connect();
+                LOG(__FUNCTION__, " retVal from SYN pkt: ", retVal);
                 if (retVal != 0) {
                     isRetValAvailable = true;
                     myCV.notify_one();
@@ -233,8 +234,11 @@ void MyTcp::reactToUserCalls() {
  * Assumes mutex is acquired. TODO update comment
  */
 void MyTcp::setRetVal(int ret) {
-    if (!isRetValAvailable) return;  // TODO IDK
-    retVal = 1;
+    if (!isRetValAvailable) {
+        LOG(__FUNCTION__, "setRetVal flag is not false!!");
+        return;  // TODO IDK
+    }
+    retVal = ret;
     isRetValAvailable = true;
     myCV.notify_one();
 }
@@ -267,6 +271,7 @@ void MyTcp::recvSegment() {  // TODO pg65
      * Packet received from the socket. Send it to the FSM.
      */
     ACTION action = mySocket->updateState(buffer, size);
+    LOG(__FUNCTION__, " current State: ", mySocket->getCurrentState());
     if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
         LOG(__FUNCTION__, " ESTABLISHED!");
         /*
@@ -284,6 +289,11 @@ void MyTcp::recvSegment() {  // TODO pg65
         LOG(__FUNCTION__, " action is NULL and it's not ESTABLISHED, assuming FSM wants us to discard the packet");
     } else {
         mySocket->executeNextAction(action, buffer, size);
+        if (mySocket->getCurrentState() == ESTABLISHED) {
+            LOG(__FUNCTION__, " trying to unlock mutex");
+            isRetValAvailable = true;
+            MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
+        }
         LOG(__FUNCTION__, " executed next action");
     }
 

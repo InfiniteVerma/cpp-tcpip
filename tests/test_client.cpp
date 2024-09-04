@@ -15,7 +15,7 @@
  */
 
 void client() {
-    LOG("Hello from client thread");
+    LOG(__FUNCTION__, "Hello from client thread");
 
     string name = "Client";
     string srcIp = "192.168.1.2";
@@ -23,28 +23,27 @@ void client() {
 
     int fd = UserSocket::create(name, srcIp, destIp, PORT);
 
-    LOG("fd: ", fd);
+    LOG(__FUNCTION__, "create fd: ", fd);
 
     int ret = UserSocket::connect(fd);
 
-    LOG("connect ret: ", ret);
+    LOG(__FUNCTION__, "connect ret: ", ret);
 
     const char* message = "Hello, world";
 
-    LOG("Sending a msg to socket");
     ret = UserSocket::send(fd, message, strlen(message), 0);
-    LOG("send ret: ", ret);
+    LOG(__FUNCTION__, "send ret: ", ret);
 
     ret = UserSocket::close(fd);
 
-    LOG("close ret: ", ret);
+    LOG(__FUNCTION__, "close ret: ", ret);
 }
 
 int main() {
     MyTcp::createMyTCP("Client");
     client();
-    LOG("Stopping tcp thread");
+    LOG(__FUNCTION__, "Stopping tcp thread");
     UserSocket::stopTCP();
-    LOG("Stopping client thread and exiting");
+    LOG(__FUNCTION__, "Stopping client thread and exiting");
     return 0;
 }

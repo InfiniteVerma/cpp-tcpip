@@ -93,14 +93,18 @@ int UserSocket::listen(UINT8 fd, int backlog) {
  * If handshake doesn't complete by then, return an error.
  */
 int UserSocket::connect(UINT8 fd) {
+    LOG(__FUNCTION__, " BEGIN fd: ", fd);
     MyMsg msg(CONNECT_SOCKET, fd);
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
 
     if (ret == -1) {
         LOG(__FUNCTION__, "ERROR ret == -1, error code", strerror(ret));
     } else {
+        LOG(__FUNCTION__, " waiting for retval from TCP thread");
         ret = MyTcp::getRetval();
     }
+
+    LOG(__FUNCTION__, " returning ret: ", ret);
     return ret;
 }
 
