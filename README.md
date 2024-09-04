@@ -1,14 +1,36 @@
 #### cpp-tcpip
 
-A tcp/ip stack in cpp, implementing RFC793.
+Implemented a TCP/IP stack in C++ (mostly as per RFC 793)
 
-#### Steps
+Current Status: Client can send a packet to server after 3-way handshake!
 
-Add the two ips in lo loopback interface
+Pending items: Sequence/Ack and retransmission logic
+
+#### Usage 
+
+1. Add the two ips in lo loopback interface
 
 ```
 sudo ip addr add 192.168.1.1/24 dev lo
 sudo ip addr add 192.168.1.2/24 dev lo
+```
+
+2. Build the project
+
+```
+make -j4
+```
+
+3. Open two terminals and run below:
+
+```
+sudo ./myserver |tee server.log
+```
+
+and
+
+```
+sudo ./myclient |tee client.log
 ```
 
 #### Plan
