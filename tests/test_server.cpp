@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <cstring>
 
+#include "common.h"
 #include "mytcp.h"
 #include "user_socket.h"
 
@@ -42,7 +43,11 @@ void server() {
         char* buffer = new char[1024];
         int size = UserSocket::receive(clientSocketFD, buffer, sizeof(buffer), 0);
 
+        LOG(__FUNCTION__, "receive returns, size: ", size);
+
         if (size > 0) {
+            cout << buffer << "\n";
+            break;
         } else {
             LOG(__FUNCTION__, " error size is not valid: ", size);
             break;

@@ -271,7 +271,7 @@ void MyTcp::recvSegment() {  // TODO pg65
      * Packet received from the socket. Send it to the FSM.
      */
     ACTION action = mySocket->updateState(buffer, size);
-    LOG(__FUNCTION__, " current State: ", mySocket->getCurrentState());
+    // LOG(__FUNCTION__, " current State: ", mySocket->getCurrentState());
     if (!action && mySocket->getCurrentState() == ESTABLISHED) {  // TODO why is first of the two checks needed?
         LOG(__FUNCTION__, " ESTABLISHED!");
         /*
@@ -281,15 +281,17 @@ void MyTcp::recvSegment() {  // TODO pg65
          */
         MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
 
-        // save packet to buffer after stripping ip and tcp header
-        int slot = MyTcp::insertPacketInSendBuffer(buffer + sizeof(IPHeader) + sizeof(TCPHeader),
-                                                   size - sizeof(IPHeader) - sizeof(TCPHeader));
-        if (slot == -1) assert(0);
+        if (size > static_cast<int>(sizeof(IPHeader) + sizeof(TCPHeader))) {
+            // save packet to buffer after stripping ip and tcp header
+            int slot = MyTcp::insertPacketInSendBuffer(buffer + sizeof(IPHeader) + sizeof(TCPHeader),
+                                                       size - sizeof(IPHeader) - sizeof(TCPHeader));
+            if (slot == -1) assert(0);
+        }
     } else if (!action) {
         LOG(__FUNCTION__, " action is NULL and it's not ESTABLISHED, assuming FSM wants us to discard the packet");
     } else {
         mySocket->executeNextAction(action, buffer, size);
-        if (mySocket->getCurrentState() == ESTABLISHED) {
+        if (mySocket->getCurrentState() == ESTABLISHED || mySocket->getCurrentState() == SYN_RECEIVED) {
             LOG(__FUNCTION__, " trying to unlock mutex");
             isRetValAvailable = true;
             MyTcp::setRetVal(0);  // unlocks the mutex and so client thread is notified
@@ -299,8 +301,8 @@ void MyTcp::recvSegment() {  // TODO pg65
 
     delete[] buffer;
 
-    LOG(__FUNCTION__, " After processing a packet!");
-    mySocket->debugPrint();
+    // LOG(__FUNCTION__, " After processing a packet!");
+    // mySocket->debugPrint();
 }
 
 const int MyTcp::getMsgQueueID() { return msgQueueID; }
@@ -328,9 +330,10 @@ int MyTcp::getRetval() {
 }
 
 int MyTcp::waitForMessageInBuffer() {
+    LOG(__FUNCTION__, " BEGIN");
     std::unique_lock lk(userPacketMutex);
     myCV.wait(lk, [] { return isNewPktInBuffer; });  // wakes up if the flag is set
-    LOG("Conditional variable notified and isNewPktInBuffer is set to val: ", slotIdx);
+    LOG(__FUNCTION__, " Conditional variable notified and isNewPktInBuffer is set to val: ", slotIdx);
     isNewPktInBuffer = false;
     myMutex.unlock();
     return slotIdx;
@@ -365,6 +368,8 @@ int MyTcp::insertPacketInSendBuffer(const void* buffer, int size) {
         }
     }
 
+    isNewPktInBuffer = true;
+    LOG(__FUNCTION__, " notifying for pkt in send buffer slot: ", slot);
     myCV.notify_one();
     return slot;
 }

@@ -55,6 +55,7 @@ int UserSocket::bind(UINT8 fd) {
  * TODO return it's fd. Currently dummy since we have one socket on each side.
  */
 int UserSocket::accept(UINT8 fd) {
+    LOG(__FUNCTION__, " BEGIN fd: ", fd);
     MyMsg msg(ACCEPT_SOCKET, fd);
 
     int ret = msgsnd(MyTcp::getMsgQueueID(), &msg, sizeof(MyMsg), 0);
@@ -65,6 +66,8 @@ int UserSocket::accept(UINT8 fd) {
     if (ret != -1) {
         ret = MyTcp::getRetval();
     }
+
+    LOG(__FUNCTION__, " getRetval returned ret: ", ret);
     return ret;
 }
 
