@@ -1,27 +1,36 @@
-#### cpp-tcpip
+# cpp-tcpip
 
-Implemented a TCP/IP stack in C++ (mostly as per RFC 793)
+This project is a custom implementation of the TCP/IP protocol stack (as per RFC 793), simulating core TCP mechanisms such as the 3-way handshake and basic data transmission. It includes a user-space simulation where socket operations are handled by communicating with a kernel-like thread, which manages connection states and packet transmission.
 
-Current Status: Client can send a packet to server after 3-way handshake!
+## Features
+ - **3-Way Handshake**: The implementation successfully establishes a TCP connection using the SYN, SYN-ACK, and ACK packets.
+ - **Data Transmission**: Sending and receiving data between connected sockets is functional (currently using some workarounds).
+ - **User and Kernel Thread Simulation**: Socket operations are initiated by the user thread and executed by a separate "kernel" thread using message queues for inter-thread communication.
 
-Pending items: Sequence/Ack and retransmission logic
+## Current Status
 
-#### Usage 
+Core mechanism of the TCP protocol are implemented (with some hacks) including connection establishment (3-way handshake) and data transfer. Details are mentioned below in **Plan** section.
 
-1. Add the two ips in lo loopback interface
+## Usage 
+
+Note: Currently, our 3-way handshake doesn't support timeout + retransmission so first run `myserver`, wait for it to reach `LISTEN` state and then run `myclient` to reach `ESTABLISHED` state.
+
+1. Clone the repository
+
+2. Add the two ips in lo loopback interface
 
 ```
 sudo ip addr add 192.168.1.1/24 dev lo
 sudo ip addr add 192.168.1.2/24 dev lo
 ```
 
-2. Build the project
+3. Build the project
 
 ```
 make -j4
 ```
 
-3. Open two terminals and run below:
+4. Open two terminals and run below:
 
 ```
 sudo ./myserver |tee server.log
@@ -33,7 +42,7 @@ and
 sudo ./myclient |tee client.log
 ```
 
-#### Plan
+## Plan
 
 Continuously iterating on it since there's so much going on here :)
 
@@ -82,12 +91,12 @@ Continuously iterating on it since there's so much going on here :)
 
 End goal: Sending a file as a byte stream over this tcp/ip implementation
 
-#### Stupid mistakes I did
+## Gochas and lessons learned
 
  - Assigned a char* pointer from MyMsg into a packet but the MyMsg instance gets deleted so pointer now pointed to undefined area.
  - Assigned and mutated a local copy of an object and then was confused why the actual object wasn't updated.
  - Called join of the second thread in it's own context (instead of main thread) causing an exception
 
-#### References
+## References
  - https://datatracker.ietf.org/doc/html/rfc791/
  - https://datatracker.ietf.org/doc/html/rfc793
