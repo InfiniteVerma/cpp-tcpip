@@ -79,8 +79,8 @@ Continuously iterating on it since there's so much going on here :)
     - [x] Add tcp/ip headers and send to socket
     - [x] After ESTABLISHED, server needs to listen for data
     - [x] For now, get the packet and dump it
-- [ ] Add debug logging
-    - [ ] write to a logfile to keep it separate from user code
+- [x] Add debug logging
+    - [x] write to a logfile to keep it separate from user code
 - [ ] Sequence and ACK logic
 - [ ] Revisit the ACTION logic of FSM (should be more tightly coupled)
 - [ ] Revisit FSM hacking done in recvSegment
