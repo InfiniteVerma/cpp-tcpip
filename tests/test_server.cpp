@@ -14,16 +14,16 @@ using namespace std;
 #define PORT 9000
 
 /*
- * Server: 192.168.1.1
- * Client: 192.168.1.2
+ * Server: 192.168.1.2
+ * Client: 192.168.1.3
  */
 
 void runServer() {
     LOG("Hello from server thread");
 
     string name = "Server";
-    string srcIp = "192.168.1.1";
-    string destIp = "192.168.1.2";
+    string srcIp = "192.168.1.2";
+    string destIp = "192.168.1.3";
 
     UINT8 fd = UserSocket::create(name, srcIp, destIp, PORT);
     LOG("Got fd: ", fd);

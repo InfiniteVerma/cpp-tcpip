@@ -10,16 +10,16 @@
 #define PORT 9000
 
 /*
- * Server: 192.168.1.1
- * Client: 192.168.1.2
+ * Server: 192.168.1.2
+ * Client: 192.168.1.3
  */
 
 void runClient() {
     LOG(__FUNCTION__, "Hello from client thread");
 
     string name = "Client";
-    string srcIp = "192.168.1.2";
-    string destIp = "192.168.1.1";
+    string srcIp = "192.168.1.3";
+    string destIp = "192.168.1.2";
 
     int fd = UserSocket::create(name, srcIp, destIp, PORT);
 

@@ -25,7 +25,7 @@ $(EXEC): $(OBJ)
 
 # Rule to compile each .cpp file into .o
 %.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ $(FLAGS)
 
 # Clean target to remove generated files
 clean:

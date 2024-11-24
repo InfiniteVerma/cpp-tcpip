@@ -6,7 +6,7 @@ myclient
 myserver
 raw_client
 raw_server
-client
-server
+#client
+#server
 log
 *log
