@@ -104,12 +104,12 @@ void MyTcp::reactToUserCalls() {
 
     switch (myMsg.mtype) {
         case CREATE_SOCKET:
-            if (socketsAvailable) {
+            if (socketsAvailable) {  // TODO track a running count of currently created sockets
                 std::lock_guard lk(myMutex);
                 LOG("Creating a new socket");
 
                 Socket* newSocket = new Socket(myMsg.socketName, myMsg.sourceIpAddr, myMsg.port);
-                int newFD = getFreeFD();
+                int newFD = getFreeFD();  // TODO hardcoded
                 isFDBusy = true;
 
                 newSocket->setDestIp(myMsg.destIpAddr);

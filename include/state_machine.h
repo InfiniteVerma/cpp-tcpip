@@ -74,5 +74,6 @@ class TCBStateM {
 };
 
 std::ostream &operator<<(std::ostream &os, const ConnectionState &state);
+string enumToName(ConnectionState state);
 
 #endif

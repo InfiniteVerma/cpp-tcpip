@@ -5,6 +5,38 @@
 
 #include "packet.h"
 
+string enumToName(ConnectionState state) {
+    switch (state) {
+        case LISTEN:
+            return "LISTEN";
+        case OPEN:
+            return "OPEN";
+        case SYN_SENT:
+            return "SYN_SENT";
+        case SYN_RECEIVED:
+            return "SYN_RECEIVED";
+        case ESTABLISHED:
+            return "ESTABLISHED";
+        case FIN_WAIT_1:
+            return "FIN_WAIT_1";
+        case FIN_WAIT_2:
+            return "FIN_WAIT_2";
+        case CLOSE_WAIT:
+            return "CLOSE_WAIT";
+        case CLOSING:
+            return "CLOSING";
+        case LAST_ACK:
+            return "LAST_ACK";
+        case TIME_WAIT:
+            return "TIME_WAIT";
+        case CLOSED:
+            return "CLOSED";
+        default:
+            LOG(__FUNCTION__, " ERROR state: " + to_string(state) + " is not recognized");
+            assert(0);
+    }
+}
+
 TCBStateM::TCBStateM() { state = CLOSED; }
 
 ConnectionState TCBStateM::getState() { return state; }

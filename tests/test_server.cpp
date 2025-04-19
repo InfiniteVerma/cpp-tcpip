@@ -38,10 +38,11 @@ void runServer() {
 
     int clientSocketFD = UserSocket::accept(fd);  // returns when there is a packet available
 
+    char buffer[1024];
     while (1) {
         LOG(__FUNCTION__, "Accept request from a client! Will now block until it sends a packet");
 
-        char* buffer = new char[1024];
+        memset(buffer, 0, sizeof(buffer));
         int size = UserSocket::receive(clientSocketFD, buffer, sizeof(buffer), 0);
 
         LOG(__FUNCTION__, " receive returns, size: ", size);

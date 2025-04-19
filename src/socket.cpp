@@ -457,6 +457,9 @@ void Socket::executeNextAction(ACTION action, char *buffer, int size) {
         Packet nextPkt;
         Timer *timerInstance = Timer::getInstance();
 
+        tcb.snd_nxt = tcb.iss + 1;
+        tcb.snd_una = tcb.iss;
+
         switch (tcb.getState()) {
             case SYN_RECEIVED: {
                 LOG(__FUNCTION__, " I switched from LISTEN TO SYN_RECEIVED");
@@ -472,6 +475,8 @@ void Socket::executeNextAction(ACTION action, char *buffer, int size) {
                 });
 
                 timerInstance->addTimer(nextPkt.getSeq(), task);
+
+                sendPacket(nextPkt);
                 break;
             }
             case ESTABLISHED: {
@@ -483,17 +488,20 @@ void Socket::executeNextAction(ACTION action, char *buffer, int size) {
                 nextPkt =
                     action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.snd_nxt, sourceIp, destIp));
                 MyTcp::setRetVal(0);
+
+                sendPacket(nextPkt);
+                break;
+            }
+            case CLOSED: {
+                LOG(__FUNCTION__, " I got a packet while socket is closed, dropping the packet");
                 break;
             }
             default:
                 // TODO handle
+                LOG(__FUNCTION__, " case: " + enumToName(tcb.getState()) + " not handled");
                 assert(0);
                 break;
         }
-
-        tcb.snd_nxt = tcb.iss + 1;
-        tcb.snd_una = tcb.iss;
-        sendPacket(nextPkt);
     }
 }
 
