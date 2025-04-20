@@ -82,6 +82,8 @@ Socket::Socket(std::string desc, const char *ip, int port) {
         assert(0);
     }
     // socketFd = socket(AF_INET, SOCK_STREAM, 0);
+
+    resetSYNRetryCount();
 }
 
 Socket::~Socket() {
@@ -146,9 +148,16 @@ int Socket::connect() {
         return 1;
     }
 
-    int ret = threeWayHandshakeClient();  // TODO rename?
+    resetSYNRetryCount();
+    int ret = startHandshake();  // TODO rename?
 
     return ret;
+}
+
+void Socket::retryHandshake() {
+    LOG(__FUNCTION__, " BEGIN");
+    incSYNRetryCount();
+    startHandshake();
 }
 
 UINT32 Socket::getLastTransmittedSeqNumber()  // TODO a better way?
@@ -166,7 +175,7 @@ UINT32 Socket::getLastTransmittedSeqNumber()  // TODO a better way?
  *    - Sends ACK, updates state machine
  *    - starts timer, adds pkt to transmission queue
  */
-int Socket::threeWayHandshakeClient() {
+int Socket::startHandshake() {
     // LOG(__FUNCTION__, " BEGIN\n");
 
     tcb.updateState(OPEN);  // To update FSM
@@ -185,43 +194,6 @@ int Socket::threeWayHandshakeClient() {
     LOG("1st SYN sent");
 
     // debugPrint();
-
-#if 0
-    char *buffer = new char[65535];
-    int size = 0;
-    int ret = receivePacketBlocking(buffer, size, 2);
-    if (ret > 0) {
-        Utils::hexDump(buffer, size);
-        LOG("After hex dump\n");
-        LOG("Server sent a packet back!!!\n");
-        LOG("Sending to update state\n");
-        ACTION nextAction = tcb.updateState(buffer, size);  // TODO
-
-        LOG("Calling nextAction\n");
-        if (!nextAction) {
-            LOG("nextAction is NULL?");
-            assert(0);
-        }
-
-        // update rcv seq number and send ACK
-        Packet tmpPkt = Packet(buffer, size);
-        tcb.rcv_nxt = tmpPkt.getSeq();  // TODO decide on this?
-
-        Packet pkt =
-            nextAction(PktData(tcb.localPortNum, tcb.remotePortNum, 0, tcb.rcv_nxt, sourceIp, destIp));  // ACK packet
-
-        sendPacket(pkt);
-
-        debugPrint();
-
-    } else {
-        LOG("No ACK received, stopping handshake!\n");
-        return 1;
-    }
-
-    // delete payload; should be done when receving ACK!!
-    // TODO start timer, retransmission queue
-#endif
 
     return 0;
 }
@@ -466,15 +438,15 @@ void Socket::executeNextAction(ACTION action, char *buffer, int size) {
                 tcb.rcv_nxt = p.getSeq() + 1;
                 tcb.irs = p.getSeq();  // TODO delete irs func
                 nextPkt = action(PktData(tcb.localPortNum, tcb.remotePortNum, tcb.rcv_nxt, tcb.iss, sourceIp, destIp));
-                timerInstance->delTimer(p.getAck());
+                timerInstance->delTimers(p.getAck());
 
-                ScheduledTask *task = new ScheduledTask(10.0, []() {
-                    LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+                // ScheduledTask *task = new ScheduledTask(3.0, []() {
+                //     LOG("TIMEOUT HIT for HANDSHAKE!!!!");
 
-                    MyTcp::setRetVal(1);
-                });
+                //    MyTcp::setRetVal(1);
+                //});
 
-                timerInstance->addTimer(nextPkt.getSeq(), task);
+                // timerInstance->addTimer(nextPkt.getSeq(), task);
 
                 sendPacket(nextPkt);
                 break;

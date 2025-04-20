@@ -10,10 +10,11 @@
 
 void printTime(std::time_t time) { std::cout << std::put_time(std::localtime(&time), "%F %T"); }
 
-ScheduledTask::ScheduledTask(double delta, FUNCTION callback) {
+ScheduledTask::ScheduledTask(double delta, FUNCTION callback, void* callbackData) {
     this->last_checked_time = time(nullptr);
     this->delta = delta;
     this->callback = callback;
+    this->callbackData = callbackData;
 }
 
 bool ScheduledTask::hasElapsed() {
@@ -39,7 +40,7 @@ bool ScheduledTask::hasElapsed() {
     return isElapsed;
 }
 
-void ScheduledTask::executeCallback() { this->callback(); }
+bool ScheduledTask::executeCallback() { return this->callback(callbackData); }
 
 Timer* Timer::myTimerInstance = nullptr;
 
@@ -62,6 +63,20 @@ void Timer::addTimer(UINT32 seqNumber, ScheduledTask* task) {
     scheduledTasks.insert({seqNumber, task});
 }
 
+void Timer::delTimers(const UINT32 ack_num) {
+    LOG(__FUNCTION__, " \n\n\n\n\n");
+    LOG(__FUNCTION__, " called for ack: ", ack_num);
+
+    for(auto task : scheduledTasks) {
+        if(task.first < ack_num) {
+            LOG(__FUNCTION__, " erasing task with seq num: " + to_string(task.first));
+            scheduledTasks.erase(task.first);
+        }
+    }
+
+    LOG(__FUNCTION__, " scheduled task size now: " + to_string(scheduledTasks.size()));
+}
+
 void Timer::delTimer(UINT32 seqNumber) {
     LOG(__FUNCTION__, " called for seq: ", seqNumber);
     if (scheduledTasks.find(seqNumber) != scheduledTasks.end()) {
@@ -78,11 +93,22 @@ void Timer::delTimer(UINT32 seqNumber) {
 void Timer::listTasks() { cout << "Listing timer tasks. Count: " << scheduledTasks.size() << "\n"; }
 
 void Timer::runTimeouts() {
-    // LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
-    for (auto data : scheduledTasks) {
-        if (data.second->hasElapsed()) {
-            LOG(__FUNCTION__, "seq number: ", data.first, " has elapsed. Calling timeout");
-            data.second->executeCallback();
+    LOG(__FUNCTION__, " timers: ", scheduledTasks.size());
+
+    for(auto it = scheduledTasks.begin(); it != scheduledTasks.end(); ) {
+        if(it->second->hasElapsed()) {
+            LOG(__FUNCTION__, "seq number: ", it->first, " has elapsed. Calling timeout");
+            bool ret = it->second->executeCallback();
+            if(ret) {
+                LOG(__FUNCTION__, "callback returned true, deleting from timer list");
+                it = scheduledTasks.erase(it);
+            } else {
+                ++it;
+            }
+        } else {
+            ++it;
         }
     }
+
+    LOG(__FUNCTION__, " DONE timers: ", scheduledTasks.size());
 }

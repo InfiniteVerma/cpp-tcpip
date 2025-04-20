@@ -35,15 +35,21 @@ class Socket {
     void receivePacketNonBlocking(char *, int &);
     int receivePacketBlocking(char *, int &, int seconds);
 
+    const uint32_t getSYNCurrRetryCount() { return curr_syn_retry_count; }
+    void retryHandshake();
+
    private:
-    int threeWayHandshakeClient();
-    // Packet getSYNPacket();
+    int startHandshake();
+    void incSYNRetryCount() { curr_syn_retry_count++; }
+    void resetSYNRetryCount() { curr_syn_retry_count = 0; }
 
     int socketFd;
     TCB tcb;
     std::string desc;
     char *sourceIp;
     char *destIp;
+
+    uint32_t curr_syn_retry_count;
 
     void sendPacket(Packet pkt);
 

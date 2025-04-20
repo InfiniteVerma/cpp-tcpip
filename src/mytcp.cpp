@@ -27,6 +27,7 @@ bool MyTcp::isFDBusy = false;
 
 bool MyTcp::isRetValAvailable = false;
 int MyTcp::retVal = 0;
+uint32_t MyTcp::max_syn_retry_count = 5;
 
 bool MyTcp::isNewPktInBuffer = false;
 int MyTcp::slotIdx = 0;
@@ -188,14 +189,30 @@ void MyTcp::reactToUserCalls() {
                     isRetValAvailable = true;
                     myCV.notify_one();
                 } else {
-                    // TODO add 5 seconds timer which if fails should return error code
-                    // Timer* timerInstance = Timer::getInstance();
-                    // ScheduledTask* task = new ScheduledTask(10.0, []() {
-                    //    LOG("TIMEOUT HIT for HANDSHAKE!!!!");
+                    Timer* timerInstance = Timer::getInstance();
 
-                    //    MyTcp::setRetVal(1);
-                    //});
-                    // timerInstance->addTimer(socketData.second->getLastTransmittedSeqNumber(), task);
+                    LOG(__FUNCTION__, " Adding a scheduled task with key: " + to_string(socketData.second->getLastTransmittedSeqNumber()));
+                    ScheduledTask* task = new ScheduledTask(
+                        3.0,
+                        [](void* data) {
+                            Socket* socket = (Socket*)data;
+                            LOG(__FUNCTION__, "TIMEOUT HIT for HANDSHAKE. syn retry count: " +
+                                                  to_string(socket->getSYNCurrRetryCount()));
+
+                            if (socket->getSYNCurrRetryCount() >= MyTcp::max_syn_retry_count) {
+                                LOG(__FUNCTION__, "Retry count: " + to_string(socket->getSYNCurrRetryCount()) +
+                                                      " exceeds max retry counts, stopping ");
+
+                                MyTcp::setRetVal(1);
+                                return true;
+                            } else {
+                                socket->retryHandshake();
+                                return false;
+                            }
+                        },
+                        (void*)socketData.second);
+
+                    timerInstance->addTimer(socketData.second->getLastTransmittedSeqNumber(), task);
                     LOG(__FUNCTION__, " connect SYN call passed. Waiting for reply now!");
                 }
             }

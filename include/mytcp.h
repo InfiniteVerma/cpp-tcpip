@@ -56,6 +56,8 @@ class MyTcp {
     static bool isNewPktInBuffer;
     static int slotIdx;
 
+    static uint32_t max_syn_retry_count;
+
     /*
      * User data
      */
